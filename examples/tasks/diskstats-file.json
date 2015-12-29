@@ -1,0 +1,80 @@
+{
+    "version": 1,
+    "schedule": {
+        "type": "simple",
+        "interval": "1s"
+    },
+    "workflow": {
+        "collect": {
+            "metrics": {
+                "/intel/linux/disk/sda/ops_read": {},
+                "/intel/linux/disk/sda/ops_write": {},
+                "/intel/linux/disk/sda/merged_read": {},
+                "/intel/linux/disk/sda/merged_write": {},
+                "/intel/linux/disk/sda/octets_read": {},
+                "/intel/linux/disk/sda/octets_write": {},
+                "/intel/linux/disk/sda/io_time": {},
+                "/intel/linux/disk/sda/time_read": {},
+                "/intel/linux/disk/sda/time_write": {},
+                "/intel/linux/disk/sda/weighted_io_time": {},
+                "/intel/linux/disk/sda/pending_ops": {},
+                "/intel/linux/disk/sda1/ops_read": {},
+                "/intel/linux/disk/sda1/ops_write": {},
+                "/intel/linux/disk/sda1/merged_read": {},
+                "/intel/linux/disk/sda1/merged_write": {},
+                "/intel/linux/disk/sda1/octets_read": {},
+                "/intel/linux/disk/sda1/octets_write": {},
+                "/intel/linux/disk/sda1/io_time": {},
+                "/intel/linux/disk/sda1/time_read": {},
+                "/intel/linux/disk/sda1/time_write": {},
+                "/intel/linux/disk/sda1/weighted_io_time": {},
+                "/intel/linux/disk/sda1/pending_ops": {},
+                "/intel/linux/disk/sdb/ops_read": {},
+                "/intel/linux/disk/sdb/ops_write": {},
+                "/intel/linux/disk/sdb/merged_read": {},
+                "/intel/linux/disk/sdb/merged_write": {},
+                "/intel/linux/disk/sdb/octets_read": {},
+                "/intel/linux/disk/sdb/octets_write": {},
+                "/intel/linux/disk/sdb/io_time": {},
+                "/intel/linux/disk/sdb/time_read": {},
+                "/intel/linux/disk/sdb/time_write": {},
+                "/intel/linux/disk/sdb/weighted_io_time": {},
+                "/intel/linux/disk/sdb/pending_ops": {},
+                "/intel/linux/disk/sdb1/ops_read": {},
+                "/intel/linux/disk/sdb1/ops_write": {},
+                "/intel/linux/disk/sdb1/merged_read": {},
+                "/intel/linux/disk/sdb1/merged_write": {},
+                "/intel/linux/disk/sdb1/octets_read": {},
+                "/intel/linux/disk/sdb1/octets_write": {},
+                "/intel/linux/disk/sdb1/io_time": {},
+                "/intel/linux/disk/sdb1/time_read": {},
+                "/intel/linux/disk/sdb1/time_write": {},
+                "/intel/linux/disk/sdb1/weighted_io_time": {},
+                "/intel/linux/disk/sdb1/pending_ops": {},
+                "/intel/linux/disk/sdb2/ops_read": {},
+                "/intel/linux/disk/sdb2/ops_write": {},
+                "/intel/linux/disk/sdb2/merged_read": {},
+                "/intel/linux/disk/sdb2/merged_write": {},
+                "/intel/linux/disk/sdb2/octets_read": {},
+                "/intel/linux/disk/sdb2/octets_write": {},
+                "/intel/linux/disk/sdb2/io_time": {},
+                "/intel/linux/disk/sdb2/time_read": {},
+                "/intel/linux/disk/sdb2/time_write": {},
+                "/intel/linux/disk/sdb2/weighted_io_time": {},
+                "/intel/linux/disk/sdb2/pending_ops": {}
+            },
+            "config": {
+            },
+            "process": null,
+            "publish": [
+                {
+                    "plugin_name": "file",
+                    "plugin_version": 3,
+                    "config": {
+                        "file": "/tmp/published_diskstats"
+                    }
+                }
+            ]
+        }
+    }
+}
