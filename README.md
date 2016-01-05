@@ -49,7 +49,7 @@ This builds the plugin in `/build/rootfs/`
 ### Collected Metrics
 This plugin has the ability to gather the following metrics:
                                                                                                 
-Metric namespace prefix is `/intel/linux/disk/<disk_device>/`																					where '<disk_device>'' expands to sda, sda1, sdb, sdb1 and so on.
+Metric namespace prefix is `/intel/linux/disk/<disk_device>/`																					where `<disk_device>` expands to sda, sda1, sdb, sdb1 and so on.
 
 Namespace | Description 
 ------------ | -------------
