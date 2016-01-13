@@ -33,15 +33,12 @@ Once you're ready to contribute code back to this repo, start with these steps:
 * Contributors will review your pull request, suggest changes, and merge it when it’s ready and/or offer feedback
 * To report a bug or issue, please open a new issue against this repository
 
-If you have questions feel free to contact the [maintainers](README.md#maintainers).
+If you have questions feel free to contact the [maintainers](https://github.com/intelsdi-x/snap/blob/master/README.md#maintainers).
 
 ## Contributing Examples
-The most immediately helpful way you can benefit this project is by cloning the repository, adding some further examples and submitting a pull request. A few topics we always want more examples of:
+The most immediately helpful way you can benefit this project is by cloning the repository, adding some further examples and submitting a pull request.
 
-* Reading metrics from NIC's registry dump.
-* Unification of metrics' names if discrepancies between vendors exist.
-
-Have you written a blog post about how you use $PROJECT? Send it to us!
+Have you written a blog post about how you use [snap](http://github.com/intelsdi-x/snap) and/or this plugin? Send it to us!
 
 ## Contribute Elsewhere
 This repository is one of **many** plugins in **snap**, a powerful telemetry framework. See the full project at http://github.com/intelsdi-x/snap

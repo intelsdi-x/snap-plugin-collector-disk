@@ -21,7 +21,7 @@ if [[ $TEST_SUITE == "unit" ]]; then
 
 	COVERALLS_TOKEN=t47LG6BQsfLwb9WxB56hXUezvwpED6D11
 	TEST_DIRS="main.go disk/"
-	VET_DIRS=". ./iostat/..."
+	VET_DIRS=". ./disk/..."
 
 	set -e
 
