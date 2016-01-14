@@ -2,7 +2,7 @@
 
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
-Copyright 2015 Intel Corporation
+Copyright 2016 Intel Corporation
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -33,31 +33,31 @@ const (
 var (
 	mockMts = []plugin.PluginMetricType{
 		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda", "ops_read"},
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "ops_read"},
 		},
 		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda", "ops_write"},
-		},
-
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda", "octets_read"},
-		},
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda", "octets_write"},
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "ops_write"},
 		},
 
 		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda1", "ops_read"},
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "octets_read"},
 		},
 		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda1", "ops_write"},
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "octets_write"},
 		},
 
 		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda1", "octets_read"},
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "ops_read"},
 		},
 		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "linux", "disk", "test_sda1", "octets_write"},
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "ops_write"},
+		},
+
+		plugin.PluginMetricType{
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "octets_read"},
+		},
+		plugin.PluginMetricType{
+			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "octets_write"},
 		},
 	}
 
