@@ -25,6 +25,9 @@ The plugin is used in the [snap framework] (http://github.com/intelsdi-x/snap).
 
 ### Installation
 
+#### Download the plugin binary:
+You can get the pre-built binaries for your OS and architecture at snap's [GitHub Releases](https://github.com/intelsdi-x/snap/releases) page. Download the plugins package from the latest release, unzip and store in a path you want `snapd` to access.
+
 #### To build the plugin binary:
 
 Fork https://github.com/intelsdi-x/snap-plugin-collector-disk  
@@ -43,6 +46,7 @@ This builds the plugin in `/build/rootfs/`
 ### Configuration and Usage
 
 * Set up the [snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started)
+* Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/README.md#examples).
 
 ## Documentation
 
@@ -51,16 +55,16 @@ This plugin has the ability to gather the following metrics:
                                                                                                 
 Metric namespace is `/intel/procfs/disk/<disk_device>/<metric_name>`																					where `<disk_device>` expands to sda, sda1, sdb, sdb1 and so on.
 
-Metric Name | Description 
+Metric namespace | Description
 ------------ | -------------
-merged_read | The number of read operations per second that could be merged with already queued operations.
-merged_write | The number of write operations per second that could be merged with already queued operations.
-octets_read | The number of octets (bytes) read per second.
-octets_write | The number of octets (bytes) written per second.
-ops_read | The number of read operations per second.
-ops_write | The number of write operations per second.
-time_read | The average time for a read operation to complete in the last interval.
-time_write | the average time for a write operation to complete in the last interval.
+/intel/procfs/disk/\<disk_device\>/merged_read | The number of read operations per second that could be merged with already queued operations.
+/intel/procfs/disk/\<disk_device\>/merged_write | The number of write operations per second that could be merged with already queued operations.
+/intel/procfs/disk/\<disk_device\>/octets_read | The number of octets (bytes) read per second.
+/intel/procfs/disk/\<disk_device\>/octets_write | The number of octets (bytes) written per second.
+/intel/procfs/disk/\<disk_device\>/ops_read | The number of read operations per second.
+/intel/procfs/disk/\<disk_device\>/ops_write | The number of write operations per second.
+/intel/procfs/disk/\<disk_device\>/time_read | The average time for a read operation to complete in the last interval.
+/intel/procfs/disk/\<disk_device\>/time_write | the average time for a write operation to complete in the last interval.
 
                                                                           
 Data type of all above metrics is float64.
@@ -107,7 +111,7 @@ Signed: false
 Loaded Time: Wed, 23 Dec 2015 11:15:02 EST
 ```
 
-Create a task JSON file (exemplary file in examples/tasks/diskstats-file.json):  
+Create a task JSON file (exemplary files in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/examples/tasks/)):
 ```json
 {
     "version": 1,
@@ -282,26 +286,22 @@ ID: 480323af-15b0-4af8-a526-eb2ca6d8ae67
 
 There isn't a current roadmap for this plugin, but it is in active development. As we launch this plugin, we do not have any outstanding requirements for the next release.
 
-If you have a feature request, please add it as an [issue](https://github.com/intelsdi-x/snap-plugin-collector-disk/issues).
+If you have a feature request, please add it as an [issue](https://github.com/intelsdi-x/snap-plugin-collector-disk/issues) and/or submit a [pull request](https://github.com/intelsdi-x/snap-plugin-collector-disk/pulls).
 
 ## Community Support
-This repository is one of **many** plugins in the **Snap Framework**: a powerful telemetry agent framework. To reach out on other use cases, visit:
+This repository is one of **many** plugins in **snap**, a powerful telemetry framework. See the full project at http://github.com/intelsdi-x/snap.
 
-* [Snap Gitter channel] (https://gitter.im/intelsdi-x/snap)
-
-The full project is at http://github.com:intelsdi-x/snap.
+To reach out to other users, head to the [main framework](https://github.com/intelsdi-x/snap#community-support) or visit [snap Gitter channel](https://gitter.im/intelsdi-x/snap).
 
 ## Contributing
 We love contributions!
 
 There's more than one way to give back, from examples to blogs to code updates. See our recommended process in [CONTRIBUTING.md](CONTRIBUTING.md).
 
+And **thank you!** Your contribution, through code and participation, is incredibly important to us.
+
 ## License
 Snap, along with this plugin, is an Open Source software released under the Apache 2.0 [License](LICENSE).
 
 ## Acknowledgements
-List authors, co-authors and anyone you'd like to mention
-
 * Author: 	[Izabella Raulin](https://github.com/IzabellaRaulin)
-
-**Thank you!** Your contribution is incredibly important to us.
