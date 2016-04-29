@@ -21,6 +21,8 @@ import (
 	"testing"
 
 	"github.com/intelsdi-x/snap/control/plugin"
+	"github.com/intelsdi-x/snap/core"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -31,33 +33,33 @@ const (
 )
 
 var (
-	mockMts = []plugin.PluginMetricType{
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "ops_read"},
+	mockMts = []plugin.MetricType{
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "ops_read"),
 		},
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "ops_write"},
-		},
-
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "octets_read"},
-		},
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda", "octets_write"},
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "ops_write"),
 		},
 
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "ops_read"},
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "octets_read"),
 		},
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "ops_write"},
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "octets_write"),
 		},
 
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "octets_read"},
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "ops_read"),
 		},
-		plugin.PluginMetricType{
-			Namespace_: []string{"intel", "procfs", "disk", "test_sda1", "octets_write"},
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "ops_write"),
+		},
+
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "octets_read"),
+		},
+		plugin.MetricType{
+			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "octets_write"),
 		},
 	}
 
@@ -82,7 +84,7 @@ func TestGetConfigPolicy(t *testing.T) {
 func TestGetMetricTypes(t *testing.T) {
 	srcFile = srcMockFile
 	srcFileOldVer = srcMockFileOldVer
-	var cfg plugin.PluginConfigType
+	var cfg plugin.ConfigType
 
 	createMockFiles()
 
