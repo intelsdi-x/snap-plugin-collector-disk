@@ -32,7 +32,7 @@ const (
 	// Name of plugin
 	Name = "disk"
 	// Version of plugin
-	Version = 1
+	Version = 2
 	// Type of plugin
 	Type = plugin.CollectorPluginType
 
