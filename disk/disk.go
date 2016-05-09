@@ -1,5 +1,3 @@
-// +build linux
-
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
 Copyright 2016 Intel Corporation
@@ -27,13 +25,14 @@ import (
 
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
+	"github.com/intelsdi-x/snap/core"
 )
 
 const (
 	// Name of plugin
 	Name = "disk"
 	// Version of plugin
-	Version = 1
+	Version = 2
 	// Type of plugin
 	Type = plugin.CollectorPluginType
 
@@ -105,23 +104,22 @@ func (dc *DiskCollector) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
 }
 
 // GetMetricTypes returns list of exposed disk stats metrics
-func (dc *DiskCollector) GetMetricTypes(_ plugin.PluginConfigType) ([]plugin.PluginMetricType, error) {
-	mts := []plugin.PluginMetricType{}
+func (dc *DiskCollector) GetMetricTypes(_ plugin.ConfigType) ([]plugin.MetricType, error) {
+	mts := []plugin.MetricType{}
 
 	if err := dc.getDiskStats(); err != nil {
 		return nil, err
 	}
 	for stat := range dc.data.stats {
-		metric := plugin.PluginMetricType{Namespace_: createNamespace(stat)}
+		metric := plugin.MetricType{Namespace_: core.NewNamespace(createNamespace(stat)...)}
 		mts = append(mts, metric)
 	}
 	return mts, nil
 }
 
 // CollectMetrics retrieves disk stats values for given metrics
-func (dc *DiskCollector) CollectMetrics(mts []plugin.PluginMetricType) ([]plugin.PluginMetricType, error) {
-	metrics := []plugin.PluginMetricType{}
-	hostname, _ := os.Hostname()
+func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, error) {
+	metrics := []plugin.MetricType{}
 
 	first := dc.first // true if collecting for the first time
 	if first {
@@ -148,11 +146,10 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.PluginMetricType) ([]plugin
 	}
 
 	for _, m := range mts {
-		if v, ok := dc.output[parseNamespace(m.Namespace())]; ok {
-			metric := plugin.PluginMetricType{
+		if v, ok := dc.output[parseNamespace(m.Namespace().Strings())]; ok {
+			metric := plugin.MetricType{
 				Namespace_: m.Namespace(),
 				Data_:      v,
-				Source_:    hostname,
 				Timestamp_: dc.data.timestamp,
 			}
 			metrics = append(metrics, metric)
