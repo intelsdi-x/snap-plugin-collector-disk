@@ -120,7 +120,6 @@ func (dc *DiskCollector) GetMetricTypes(_ plugin.ConfigType) ([]plugin.MetricTyp
 // CollectMetrics retrieves disk stats values for given metrics
 func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, error) {
 	metrics := []plugin.MetricType{}
-	hostname, _ := os.Hostname()
 
 	first := dc.first // true if collecting for the first time
 	if first {
@@ -147,17 +146,10 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 	}
 
 	for _, m := range mts {
-		tags := m.Tags()
-		if tags == nil {
-			tags = map[string]string{}
-		}
-		tags["hostname"] = hostname
-
 		if v, ok := dc.output[parseNamespace(m.Namespace().Strings())]; ok {
 			metric := plugin.MetricType{
 				Namespace_: m.Namespace(),
 				Data_:      v,
-				Tags_:      tags,
 				Timestamp_: dc.data.timestamp,
 			}
 			metrics = append(metrics, metric)
