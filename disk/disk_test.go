@@ -82,8 +82,8 @@ func TestGetConfigPolicy(t *testing.T) {
 }
 
 func TestGetMetricTypes(t *testing.T) {
-	srcFile = srcMockFile
-	srcFileOldVer = srcMockFileOldVer
+	defaultSrcFile = srcMockFile
+	defaultSrcFileOld = srcMockFileOldVer
 	var cfg plugin.ConfigType
 
 	createMockFiles()
@@ -110,7 +110,7 @@ func TestGetMetricTypes(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		os.Remove(srcFile) // remove srcFile for kernel 2.6+
+		os.Remove(defaultSrcFile) // remove srcFile for kernel 2.6+
 		results, err := diskPlugin.GetMetricTypes(cfg)
 
 		So(err, ShouldBeNil)
@@ -132,7 +132,7 @@ func TestGetMetricTypes(t *testing.T) {
 	})
 
 	Convey("invalid syntax of source file", t, func() {
-		srcFile = srcMockFileInv
+		defaultSrcFile = srcMockFileInv
 
 		diskPlugin, err := New()
 		Convey("new disk collector", func() {
@@ -164,8 +164,8 @@ func TestGetMetricTypes(t *testing.T) {
 }
 
 func TestCollectMetrics(t *testing.T) {
-	srcFile = srcMockFile
-	srcFileOldVer = srcMockFileOldVer
+	defaultSrcFile = srcMockFile
+	defaultSrcFileOld = srcMockFileOldVer
 	createMockFiles()
 
 	Convey("source file available", t, func() {
@@ -193,7 +193,7 @@ func TestCollectMetrics(t *testing.T) {
 			})
 
 			Convey("change values of data", func() {
-				srcFile = srcMockFileNext
+				defaultSrcFile = srcMockFileNext
 				results, err := diskPlugin.CollectMetrics(mockMts)
 				So(err, ShouldBeNil)
 				So(results, ShouldNotBeEmpty)

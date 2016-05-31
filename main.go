@@ -32,8 +32,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	plugin.Start(
-		plugin.NewPluginMeta(disk.Name, disk.Version, disk.Type, []string{}, []string{plugin.SnapGOBContentType}, plugin.ConcurrencyCount(1)),
+		disk.Meta(),
 		p,
 		os.Args[1],
 	)

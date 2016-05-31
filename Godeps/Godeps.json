@@ -9,6 +9,10 @@
 			"Rev": "cd7d1bbe41066b6c1f19780f895901052150a575"
 		},
 		{
+			"ImportPath": "github.com/intelsdi-x/snap-plugin-utilities/config",
+			"Rev": "f907c27a012b4e57329799c1f00fb22241243f2d"
+		},
+		{
 			"ImportPath": "github.com/intelsdi-x/snap/control/plugin",
 			"Comment": "v0.13.0-beta-67-g891c09f",
 			"Rev": "891c09fd7e93aaf7cc0fb976fb91407901fd3843"
