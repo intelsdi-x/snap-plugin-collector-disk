@@ -48,6 +48,9 @@ This builds the plugin in `/build/rootfs/`
 * Set up the [snap framework](https://github.com/intelsdi-x/snap/blob/master/README.md#getting-started)
 * Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/README.md#examples).
 
+Configuration parameters:
+- `procfs_path` path to 'diskstats' or 'partitions' file (helpful for running plugin in Docker container)
+
 ## Documentation
 
 ### Collected Metrics

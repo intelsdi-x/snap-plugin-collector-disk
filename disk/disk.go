@@ -398,6 +398,8 @@ func resolveSrcFile(cfg interface{}) (string, error) {
 		if err == nil {
 			fh.Close()
 			return srcFile.(string), nil
+		} else {
+			return "", fmt.Errorf("Provided path to procfs diskstats is not correct {%s}", srcFile.(string))
 		}
 	}
 	// second default standard procfs
