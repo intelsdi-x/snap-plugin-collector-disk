@@ -197,7 +197,7 @@ func (dc *DiskCollector) getDiskStats(srcFile string) error {
 	defer fh.Close()
 
 	if err != nil {
-		return fmt.Errorf("Error open /proc/{diskstats|partitions}, error = %s", err)
+		return fmt.Errorf("Error opening /proc/{diskstats|partitions}, error = %s", err)
 	}
 	scanner := bufio.NewScanner(fh)
 	dc.data.timestamp = time.Now()
@@ -257,7 +257,7 @@ func (dc *DiskCollector) getDiskStats(srcFile string) error {
 				dc.data.stats[diskName+"/"+key] = value
 			} else {
 				// parse failure
-				return fmt.Errorf("Error %+v, cannot convert value of `%+v` equals %+v to uint64", err, diskName+"/"+key, val)
+				return fmt.Errorf("Error %v, cannot convert value of `%v` equals %v to uint64", err, diskName+"/"+key, val)
 			}
 		}
 	} // end of scanner.Scan()
