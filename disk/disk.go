@@ -19,10 +19,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/intelsdi-x/snap-plugin-utilities/config"
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
 	"github.com/intelsdi-x/snap/core"
@@ -30,11 +32,11 @@ import (
 
 const (
 	// Name of plugin
-	Name = "disk"
+	pluginName = "disk"
 	// Version of plugin
-	Version = 2
+	pluginVersion = 3
 	// Type of plugin
-	Type = plugin.CollectorPluginType
+	pluginType = plugin.CollectorPluginType
 
 	nsVendor = "intel"
 	nsClass  = "procfs"
@@ -60,10 +62,10 @@ const (
 
 var (
 	// Disk statistics source for kernel 2.6+
-	srcFile = "/proc/diskstats"
+	defaultSrcFile = "/proc/diskstats"
 
 	// Source for older kernel versions
-	srcFileOldVer = "/proc/partitions"
+	defaultSrcFileOld = "/proc/partitions"
 )
 
 // DiskCollector holds disk statistics
@@ -98,18 +100,36 @@ func New() (*DiskCollector, error) {
 	return dc, nil
 }
 
+// Meta returns plugin meta data
+func Meta() *plugin.PluginMeta {
+	return plugin.NewPluginMeta(
+		pluginName,
+		pluginVersion,
+		pluginType,
+		[]string{},
+		[]string{plugin.SnapGOBContentType},
+		plugin.ConcurrencyCount(1),
+	)
+}
+
 // GetConfigPolicy returns a ConfigPolicy
 func (dc *DiskCollector) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
 	return cpolicy.New(), nil
 }
 
 // GetMetricTypes returns list of exposed disk stats metrics
-func (dc *DiskCollector) GetMetricTypes(_ plugin.ConfigType) ([]plugin.MetricType, error) {
+func (dc *DiskCollector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, error) {
 	mts := []plugin.MetricType{}
 
-	if err := dc.getDiskStats(); err != nil {
+	procFilePath, err := resolveSrcFile(cfg)
+	if err != nil {
 		return nil, err
 	}
+
+	if err := dc.getDiskStats(procFilePath); err != nil {
+		return nil, err
+	}
+
 	for stat := range dc.data.stats {
 		metric := plugin.MetricType{Namespace_: core.NewNamespace(createNamespace(stat)...)}
 		mts = append(mts, metric)
@@ -120,6 +140,11 @@ func (dc *DiskCollector) GetMetricTypes(_ plugin.ConfigType) ([]plugin.MetricTyp
 // CollectMetrics retrieves disk stats values for given metrics
 func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, error) {
 	metrics := []plugin.MetricType{}
+
+	procFilePath, err := resolveSrcFile(mts[0])
+	if err != nil {
+		return nil, err
+	}
 
 	first := dc.first // true if collecting for the first time
 	if first {
@@ -133,7 +158,7 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 	}
 
 	// get presence disk stats
-	if err := dc.getDiskStats(); err != nil {
+	if err := dc.getDiskStats(procFilePath); err != nil {
 		return nil, err
 	}
 
@@ -160,35 +185,25 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 }
 
 // getDiskStats gets disk stats from file (/proc/{diskstats|partitions}) and stores them in the DiskCollector structure
-func (dc *DiskCollector) getDiskStats() error {
+func (dc *DiskCollector) getDiskStats(srcFile string) error {
 
-	var scanner *bufio.Scanner
 	fieldshift := 0
-
-	//map disk statistics keys (names) to scanned fields
-	data := make(map[string]string)
+	if path.Base(srcFile) == "partitions" {
+		/* Kernel 2.4, Partition */
+		fieldshift = 1
+	}
 
 	fh, err := os.Open(srcFile)
 	defer fh.Close()
 
-	if err == nil {
-		scanner = bufio.NewScanner(fh)
-	} else {
-		// unable to open /proc/diskstats, try to open /proc/partitions
-		/* Kernel 2.4, Partition */
-		fh2, err2 := os.Open(srcFileOldVer)
-		defer fh2.Close()
-
-		if err2 != nil {
-			return fmt.Errorf("Error open /proc/{diskstats|partitions}, errors = %s; %s", err, err2)
-		}
-
-		/* Kernel is 2.4.* */
-		fieldshift = 1
-		scanner = bufio.NewScanner(fh2)
+	if err != nil {
+		return fmt.Errorf("Error opening /proc/{diskstats|partitions}, error = %s", err)
 	}
-
+	scanner := bufio.NewScanner(fh)
 	dc.data.timestamp = time.Now()
+
+	//map disk statistics keys (names) to scanned fields
+	data := make(map[string]string)
 
 	// scan file content
 	for scanner.Scan() {
@@ -242,7 +257,7 @@ func (dc *DiskCollector) getDiskStats() error {
 				dc.data.stats[diskName+"/"+key] = value
 			} else {
 				// parse failure
-				return fmt.Errorf("Error %+v, cannot convert value of `%+v` equals %+v to uint64", err, diskName+"/"+key, val)
+				return fmt.Errorf("Error %v, cannot convert value of `%v` equals %v to uint64", err, diskName+"/"+key, val)
 			}
 		}
 	} // end of scanner.Scan()
@@ -374,4 +389,41 @@ func parseMetricKey(k string) (disk, metric string) {
 		return
 	}
 	return result[0], result[1]
+}
+
+func resolveSrcFile(cfg interface{}) (string, error) {
+	// first configuration
+	if srcFile, err := config.GetConfigItem(cfg, "proc_path"); err == nil {
+		// diskstats
+		diskstats := path.Join(srcFile.(string), "diskstats")
+		fh, err := os.Open(diskstats)
+		if err == nil {
+			fh.Close()
+			return diskstats, nil
+		}
+
+		// partitions old kernel
+		partitions := path.Join(srcFile.(string), "partitions")
+		fh, err = os.Open(partitions)
+		if err == nil {
+			fh.Close()
+			return partitions, nil
+		} else {
+			return "", fmt.Errorf("Provided path to procfs diskstats/partitions is not correct {%s}", srcFile.(string))
+		}
+
+	}
+	// second default standard procfs
+	if fh, err := os.Open(defaultSrcFile); err == nil {
+		fh.Close()
+		return defaultSrcFile, nil
+	}
+
+	// for default old kernel
+	if fh, err := os.Open(defaultSrcFileOld); err == nil {
+		fh.Close()
+		return defaultSrcFileOld, nil
+	}
+
+	return "", fmt.Errorf("Could not find procfs disk stats file")
 }

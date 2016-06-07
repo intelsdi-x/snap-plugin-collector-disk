@@ -19,7 +19,11 @@
         "/intel/procfs/disk/sda/weighted_io_time": {},
         "/intel/procfs/disk/sda/pending_ops": {}
       },
-      "config": {},
+      "config": {
+        "/intel/procfs/disk": {
+          "procfs_path": "/var/proc/diskstats"
+        }
+      },
       "process": null,
       "publish": [
         {
