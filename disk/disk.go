@@ -393,14 +393,25 @@ func parseMetricKey(k string) (disk, metric string) {
 
 func resolveSrcFile(cfg interface{}) (string, error) {
 	// first configuration
-	if srcFile, err := config.GetConfigItem(cfg, "procfs_path"); err == nil {
-		fh, err := os.Open(srcFile.(string))
+	if srcFile, err := config.GetConfigItem(cfg, "proc_path"); err == nil {
+		// diskstats
+		diskstats := path.Join(srcFile.(string), "diskstats")
+		fh, err := os.Open(diskstats)
 		if err == nil {
 			fh.Close()
-			return srcFile.(string), nil
-		} else {
-			return "", fmt.Errorf("Provided path to procfs diskstats is not correct {%s}", srcFile.(string))
+			return diskstats, nil
 		}
+
+		// partitions old kernel
+		partitions := path.Join(srcFile.(string), "partitions")
+		fh, err = os.Open(partitions)
+		if err == nil {
+			fh.Close()
+			return partitions, nil
+		} else {
+			return "", fmt.Errorf("Provided path to procfs diskstats/partitions is not correct {%s}", srcFile.(string))
+		}
+
 	}
 	// second default standard procfs
 	if fh, err := os.Open(defaultSrcFile); err == nil {
