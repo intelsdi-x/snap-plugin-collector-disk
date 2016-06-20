@@ -24,10 +24,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/intelsdi-x/snap-plugin-utilities/config"
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
 	"github.com/intelsdi-x/snap/core"
+
+	"github.com/intelsdi-x/snap-plugin-utilities/config"
 )
 
 const (
@@ -114,7 +115,12 @@ func Meta() *plugin.PluginMeta {
 
 // GetConfigPolicy returns a ConfigPolicy
 func (dc *DiskCollector) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
-	return cpolicy.New(), nil
+	cp := cpolicy.New()
+	rule, _ := cpolicy.NewStringRule("proc_path", false, "/proc")
+	node := cpolicy.NewPolicyNode()
+	node.Add(rule)
+	cp.Add([]string{nsVendor, nsClass, pluginName}, node)
+	return cp, nil
 }
 
 // GetMetricTypes returns list of exposed disk stats metrics
