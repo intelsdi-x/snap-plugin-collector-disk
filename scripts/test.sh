@@ -7,8 +7,20 @@
 # 5. race detector (http://blog.golang.org/race-detector)
 # 6. test coverage (http://blog.golang.org/cover)
 
-# Capture what test we should run
-TEST_SUITE=$1
+# Either command line or environment should be specified
+if [ $# -ne 1 ] && [ -z "$TEST_SUITE" ]; then
+	echo "ERROR; missing TEST_SUITE (Usage: $0 TEST_SUITE)"
+	exit -2
+fi
+# Capture what test we should run from command line
+if [ -z "$TEST_SUITE" ]; then
+	TEST_SUITE=$1
+fi
+# Check validity
+if [ “$TEST_SUITE” != “unit” ]; then
+	echo "Error; invalid TEST_SUITE (value must be one of 'unit'; received $TEST_SUITE)"
+	exit -1
+fi
 
 if [[ $TEST_SUITE == "unit" ]]; then
 	go get github.com/axw/gocov/gocov
