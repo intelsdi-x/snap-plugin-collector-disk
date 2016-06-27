@@ -100,7 +100,8 @@ func TestGetMetricTypes(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(results, ShouldNotBeEmpty)
 		// 8 devices/partitions (sda, sda1, sda2, sda3, sdb, sdb1, sdb2) and for each 11 extended stats gives 88 metrics
-		So(len(results), ShouldEqual, 88)
+		// but has these are now dynamic only 11 entries are returned
+		So(len(results), ShouldEqual, 11)
 
 	})
 
@@ -116,7 +117,8 @@ func TestGetMetricTypes(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(results, ShouldNotBeEmpty)
 		// 8 devices/partitions (sda, sda1, sda2, sda3, sdb, sdb1, sdb2) and for each 4 stats gives 32 metrics
-		So(len(results), ShouldEqual, 32)
+		// but has these are now dynamic only 4 entries are returned
+		So(len(results), ShouldEqual, 4)
 	})
 
 	Convey("source files not available", t, func() {
