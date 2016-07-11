@@ -49,7 +49,7 @@ This builds the plugin in `/build/rootfs/`
 * Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/README.md#examples).
 
 Configuration parameters:
-- `procfs_path` path to 'diskstats' or 'partitions' file (helpful for running plugin in Docker container)
+- `proc_path` path to 'diskstats' or 'partitions' file (helpful for running plugin in Docker container)
 
 ## Documentation
 
@@ -70,7 +70,7 @@ Metric namespace | Description
 /intel/procfs/disk/\<disk_device\>/time_write | the average time for a write operation to complete in the last interval.
 
 Plugin has ability to read metrics from `diskstats` file for kernel 2.6+ or from `partitions` for older kernel versions.
-Path to above files can be provided in configuration in task manifest as `procfs_path`. If configuration is not provided, plugin will try
+Path to above files can be provided in configuration in task manifest as `proc_path`. If configuration is not provided, plugin will try
 to read from default locations which are `/proc/diskstats` or `/proc/partitions` respectively.
 
 Data type of all above metrics is float64.
@@ -190,7 +190,7 @@ Create a task JSON file (exemplary files in [examples/tasks/] (https://github.co
             },
             "config": {
               "/intel/procfs/disk": {
-                  "procfs_path": "/var/proc/diskstats"
+                  "proc_path": "/var/proc"
                 }
             },
             "process": null,

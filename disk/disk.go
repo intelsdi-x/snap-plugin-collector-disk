@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/intelsdi-x/snap/control/plugin"
 	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
 	"github.com/intelsdi-x/snap/core"
@@ -136,9 +138,23 @@ func (dc *DiskCollector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricT
 		return nil, err
 	}
 
+	// List of terminal metric names
+	mList := make(map[string]bool)
 	for stat := range dc.data.stats {
 		metric := plugin.MetricType{Namespace_: core.NewNamespace(createNamespace(stat)...)}
-		mts = append(mts, metric)
+		ns := metric.Namespace()
+		// Disk metric (aka last element in namespace)
+		mItem := ns[len(ns)-1]
+		// Keep it if not already seen before
+		if !mList[mItem.Value] {
+			mList[mItem.Value] = true
+			mts = append(mts, plugin.MetricType{
+				Namespace_: core.NewNamespace(prefix...).
+					AddDynamicElement("disk", "name of disk").
+					AddStaticElement(mItem.Value),
+				Description_: "dynamic disk metric: " + mItem.Value,
+			})
+		}
 	}
 	return mts, nil
 }
@@ -175,15 +191,50 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 			return nil, err
 		}
 	}
-
 	for _, m := range mts {
-		if v, ok := dc.output[parseNamespace(m.Namespace().Strings())]; ok {
-			metric := plugin.MetricType{
-				Namespace_: m.Namespace(),
-				Data_:      v,
-				Timestamp_: dc.data.timestamp,
+		ns := m.Namespace()
+		if ns[len(ns)-2].Value == "*" {
+			found := false
+			for i := range dc.output {
+				cMetric := strings.Split(i, "/")
+				if cMetric[len(cMetric)-1] == ns[len(ns)-1].Value {
+					ns1 := core.NewNamespace(createNamespace(i)...)
+					ns1[len(ns1)-2].Name = ns[len(ns)-2].Name
+					metric := plugin.MetricType{
+						Namespace_: ns1,
+						Data_:      dc.output[i],
+						Timestamp_: dc.data.timestamp,
+					}
+					metrics = append(metrics, metric)
+					found = true
+				}
 			}
-			metrics = append(metrics, metric)
+			if !found {
+				for i := range dc.data.stats {
+					cMetric := strings.Split(i, "/")
+					if cMetric[len(cMetric)-1] == ns[len(ns)-1].Value {
+						ns1 := core.NewNamespace(createNamespace(i)...)
+						ns1[len(ns1)-2].Name = ns[len(ns)-2].Name
+						metric := plugin.MetricType{
+							Namespace_: ns1,
+							Data_:      dc.data.stats[i],
+							Timestamp_: dc.data.timestamp,
+						}
+						metrics = append(metrics, metric)
+					}
+				}
+			}
+		} else {
+			if v, ok := dc.output[parseNamespace(m.Namespace().Strings())]; ok {
+				metric := plugin.MetricType{
+					Namespace_: m.Namespace(),
+					Data_:      v,
+					Timestamp_: dc.data.timestamp,
+				}
+				metrics = append(metrics, metric)
+			} else {
+				log.Warning(fmt.Sprintf("Can not find static metric value for %s", m.Namespace().Strings()))
+			}
 		}
 	}
 
