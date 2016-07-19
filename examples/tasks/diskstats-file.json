@@ -7,29 +7,29 @@
   "workflow": {
     "collect": {
       "metrics": {
-        "/intel/procfs/disk/sda/ops_read": {},
-        "/intel/procfs/disk/sda/ops_write": {},
-        "/intel/procfs/disk/sda/merged_read": {},
-        "/intel/procfs/disk/sda/merged_write": {},
-        "/intel/procfs/disk/sda/octets_read": {},
-        "/intel/procfs/disk/sda/octets_write": {},
-        "/intel/procfs/disk/sda/io_time": {},
-        "/intel/procfs/disk/sda/time_read": {},
-        "/intel/procfs/disk/sda/time_write": {},
-        "/intel/procfs/disk/sda/weighted_io_time": {},
-        "/intel/procfs/disk/sda/pending_ops": {}
+        "/intel/procfs/disk/*/ops_read": {},
+        "/intel/procfs/disk/*/ops_write": {},
+        "/intel/procfs/disk/*/merged_read": {},
+        "/intel/procfs/disk/*/merged_write": {},
+        "/intel/procfs/disk/*/octets_read": {},
+        "/intel/procfs/disk/*/octets_write": {},
+        "/intel/procfs/disk/*/io_time": {},
+        "/intel/procfs/disk/*/time_read": {},
+        "/intel/procfs/disk/*/time_write": {},
+        "/intel/procfs/disk/*/weighted_io_time": {},
+        "/intel/procfs/disk/*/pending_ops": {}
       },
       "config": {
         "/intel/procfs/disk": {
-          "proc_path": "/var/proc"
+          "proc_path": "/proc"
         }
       },
       "process": null,
       "publish": [
         {
-          "plugin_name": "file",
+          "plugin_name": "mock-file",
           "config": {
-            "file": "/tmp/published_diskstats"
+            "file": "/tmp/published_diskstats.log"
           }
         }
       ]
