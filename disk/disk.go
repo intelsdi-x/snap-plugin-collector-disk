@@ -217,7 +217,9 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 						ns1[len(ns1)-2].Name = ns[len(ns)-2].Name
 						metric := plugin.MetricType{
 							Namespace_: ns1,
-							Data_:      dc.data.stats[i],
+							//This is because the first time data is collected, it is stored as a uint64 when parsing
+							//However, the type difference can cause issues with some databases (like InfluxDB)
+							Data_:      float64(dc.data.stats[i]),
 							Timestamp_: dc.data.timestamp,
 						}
 						metrics = append(metrics, metric)
