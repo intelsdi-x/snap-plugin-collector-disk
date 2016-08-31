@@ -53,10 +53,17 @@ Configuration parameters:
 
 ## Documentation
 
+Plugin has ability to read metrics from `diskstats` file for kernel 2.6+ or from `partitions` for older kernel versions.
+Path to above files can be provided in configuration in task manifest as `proc_path`. If configuration is not provided, plugin will try
+to read from default locations which are `/proc/diskstats` or `/proc/partitions` respectively.
+
+To read more about disk I/O statistics fields, please visit [www.kernel.org/doc/Documentation/iostats.txt](https://www.kernel.org/doc/Documentation/iostats.txt)
+
+
 ### Collected Metrics
 This plugin has the ability to gather the following metrics:
                                                                                                 
-Metric namespace is `/intel/procfs/disk/<disk_device>/<metric_name>`																					where `<disk_device>` expands to sda, sda1, sdb, sdb1 and so on.
+Metric namespace is `/intel/procfs/disk/<disk_device>/<metric_name>` where `<disk_device>` expands to sda, sda1, sdb, sdb1 and so on.
 
 Metric namespace | Description
 ------------ | -------------
@@ -66,12 +73,13 @@ Metric namespace | Description
 /intel/procfs/disk/\<disk_device\>/octets_write | The number of octets (bytes) written per second.
 /intel/procfs/disk/\<disk_device\>/ops_read | The number of read operations per second.
 /intel/procfs/disk/\<disk_device\>/ops_write | The number of write operations per second.
-/intel/procfs/disk/\<disk_device\>/time_read | The average time for a read operation to complete in the last interval.
-/intel/procfs/disk/\<disk_device\>/time_write | the average time for a write operation to complete in the last interval.
+/intel/procfs/disk/\<disk_device\>/time_read | The average time for a read operation to complete in the last interval, in miliseconds.
+/intel/procfs/disk/\<disk_device\>/time_write | The average time for a write operation to complete in the last interval, in miliseconds.
+/intel/procfs/disk/\<disk_device\>/io_time | The time spent doing I/Os, in miliseconds.
+/intel/procfs/disk/\<disk_device\>/weighted_io_time<sup>(1)</sup> | The weighted time spent doing I/Os, in miliseconds.
 
-Plugin has ability to read metrics from `diskstats` file for kernel 2.6+ or from `partitions` for older kernel versions.
-Path to above files can be provided in configuration in task manifest as `proc_path`. If configuration is not provided, plugin will try
-to read from default locations which are `/proc/diskstats` or `/proc/partitions` respectively.
+<sup>1)</sup> The value of metric `weighted_io_time` is incremented at each I/O start, I/O completion, I/O merge, or read of these stats by the number of I/Os in progress times the number of milliseconds spent doing I/O since the
+last update of this field.
 
 Data type of all above metrics is float64.
 
@@ -108,9 +116,9 @@ $ snapctl metric list | grep sda
 
 Load file plugin for publishing:
 ```
-$ snapctl plugin load $SNAP_DIR/build/plugin/snap-publisher-file
+$ snapctl plugin load $SNAP_DIR/build/plugin/snap-plugin-publisher-mock-file
 Plugin loaded
-Name: file
+Name: mock-file
 Version: 3
 Type: publisher
 Signed: false
@@ -128,65 +136,17 @@ Create a task JSON file (exemplary files in [examples/tasks/] (https://github.co
     "workflow": {
         "collect": {
             "metrics": {
-				"/intel/procfs/disk/sda/ops_read": {},
-                "/intel/procfs/disk/sda/ops_write": {},
-                "/intel/procfs/disk/sda/merged_read": {},
-                "/intel/procfs/disk/sda/merged_write": {},
-                "/intel/procfs/disk/sda/octets_read": {},
-                "/intel/procfs/disk/sda/octets_write": {},
-                "/intel/procfs/disk/sda/io_time": {},
-                "/intel/procfs/disk/sda/time_read": {},
-                "/intel/procfs/disk/sda/time_write": {},
-                "/intel/procfs/disk/sda/weighted_io_time": {},
-                "/intel/procfs/disk/sda/pending_ops": {},
-				
-                "/intel/procfs/disk/sda1/ops_read": {},
-                "/intel/procfs/disk/sda1/ops_write": {},
-                "/intel/procfs/disk/sda1/merged_read": {},
-                "/intel/procfs/disk/sda1/merged_write": {},
-                "/intel/procfs/disk/sda1/octets_read": {},
-                "/intel/procfs/disk/sda1/octets_write": {},
-                "/intel/procfs/disk/sda1/io_time": {},
-                "/intel/procfs/disk/sda1/time_read": {},
-                "/intel/procfs/disk/sda1/time_write": {},
-                "/intel/procfs/disk/sda1/weighted_io_time": {},
-                "/intel/procfs/disk/sda1/pending_ops": {},
-				
-                "/intel/procfs/disk/sdb/ops_read": {},
-                "/intel/procfs/disk/sdb/ops_write": {},
-                "/intel/procfs/disk/sdb/merged_read": {},
-                "/intel/procfs/disk/sdb/merged_write": {},
-                "/intel/procfs/disk/sdb/octets_read": {},
-                "/intel/procfs/disk/sdb/octets_write": {},
-                "/intel/procfs/disk/sdb/io_time": {},
-                "/intel/procfs/disk/sdb/time_read": {},
-                "/intel/procfs/disk/sdb/time_write": {},
-                "/intel/procfs/disk/sdb/weighted_io_time": {},
-                "/intel/procfs/disk/sdb/pending_ops": {},
-				
-				"/intel/procfs/disk/sdb1/ops_read": {},
-                "/intel/procfs/disk/sdb1/ops_write": {},
-                "/intel/procfs/disk/sdb1/merged_read": {},
-                "/intel/procfs/disk/sdb1/merged_write": {},
-                "/intel/procfs/disk/sdb1/octets_read": {},
-                "/intel/procfs/disk/sdb1/octets_write": {},
-                "/intel/procfs/disk/sdb1/io_time": {},
-                "/intel/procfs/disk/sdb1/time_read": {},
-                "/intel/procfs/disk/sdb1/time_write": {},
-                "/intel/procfs/disk/sdb1/weighted_io_time": {},
-                "/intel/procfs/disk/sdb1/pending_ops": {},
-				
-				"/intel/procfs/disk/sdb2/ops_read": {},
-                "/intel/procfs/disk/sdb2/ops_write": {},
-                "/intel/procfs/disk/sdb2/merged_read": {},
-                "/intel/procfs/disk/sdb2/merged_write": {},
-                "/intel/procfs/disk/sdb2/octets_read": {},
-                "/intel/procfs/disk/sdb2/octets_write": {},
-                "/intel/procfs/disk/sdb2/io_time": {},
-                "/intel/procfs/disk/sdb2/time_read": {},
-                "/intel/procfs/disk/sdb2/time_write": {},
-                "/intel/procfs/disk/sdb2/weighted_io_time": {},
-                "/intel/procfs/disk/sdb2/pending_ops": {}								
+                "/intel/procfs/disk/*/ops_read": {},
+                "/intel/procfs/disk/*/ops_write": {},
+                "/intel/procfs/disk/*/merged_read": {},
+                "/intel/procfs/disk/*/merged_write": {},
+                "/intel/procfs/disk/*/octets_read": {},
+                "/intel/procfs/disk/*/octets_write": {},
+                "/intel/procfs/disk/*/io_time": {},
+                "/intel/procfs/disk/*/time_read": {},
+                "/intel/procfs/disk/*/time_write": {},
+                "/intel/procfs/disk/*/weighted_io_time": {},
+                "/intel/procfs/disk/*/pending_ops": {}						
             },
             "config": {
               "/intel/procfs/disk": {
@@ -196,9 +156,9 @@ Create a task JSON file (exemplary files in [examples/tasks/] (https://github.co
             "process": null,
             "publish": [
                 {
-                    "plugin_name": "file",
+                    "plugin_name": "mock-file",
                     "config": {
-                        "file": "/tmp/published_diskstats"
+                        "file": "/tmp/published_diskstats.log"
                     }
                 }
             ]
