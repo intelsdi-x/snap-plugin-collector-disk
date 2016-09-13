@@ -1,0 +1,20 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: disk-deployment
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                app: disk-collector
+        spec:
+            containers:
+            - name: main
+              image: intelsdi/snap:alpine
+              env:
+                - name: SNAP_VERSION
+                  value: "latest"
+              imagePullPolicy: "IfNotPresent"
+
