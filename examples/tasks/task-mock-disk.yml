@@ -1,0 +1,13 @@
+---
+  version: 1
+  schedule:
+    type: "simple"
+    interval: "1s"
+  max-failures: 10
+  workflow:
+    collect:
+      metrics:
+        /intel/procfs/disk/*/* : {}
+      config:
+        /intel/procfs/proc:
+            proc_path: "/proc"
