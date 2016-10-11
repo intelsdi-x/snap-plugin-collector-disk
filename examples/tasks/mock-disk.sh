@@ -16,7 +16,7 @@ PLUGIN_PATH=${PLUGIN_PATH:-"${TMPDIR}/snap/plugins"}
 mkdir -p $PLUGIN_PATH
 
 _info "Get latest plugins"
-(cd $PLUGIN_PATH && curl -sSO http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-disk/latest/linux/x86_64/snap-plugin-collector-disk && chmod 755 snap-plugin-collector-disk)
+(cd $PLUGIN_PATH && curl -sfLSO http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-disk/latest/linux/x86_64/snap-plugin-collector-disk && chmod 755 snap-plugin-collector-disk)
 
 SNAP_FLAG=0
 
