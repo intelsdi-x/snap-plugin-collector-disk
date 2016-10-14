@@ -30,7 +30,7 @@ You can get the pre-built binaries for your OS and architecture at snap's [GitHu
 
 #### To build the plugin binary:
 
-Fork https://github.com/intelsdi-x/snap-plugin-collector-disk  
+Fork https://github.com/intelsdi-x/snap-plugin-collector-disk
 Clone repo into `$GOPATH/src/github.com/intelsdi-x/`:
 
 ```
@@ -41,7 +41,7 @@ Build the snap disk plugin by running make within the cloned repo:
 ```
 $ make
 ```
-This builds the plugin in `/build/rootfs/`
+This builds the plugin in `/build/`
 
 ### Configuration and Usage
 
@@ -96,33 +96,25 @@ $ snapd -l 1 -t 0
 
 Load disk plugin for collecting:
 ```
-$ snapctl plugin load $SNAP_DISK_PLUGIN_DIR/build/rootfs/snap-plugin-collector-disk
-Plugin loaded
-Name: disk
-Version: 1
-Type: collector
-Signed: false
-Loaded Time: Wed, 23 Dec 2015 11:14:37 EST
+$ snapctl plugin load $SNAP_DISK_PLUGIN_DIR/build/linux/x86_64/snap-plugin-collector-disk
 ```
 See all available metrics:
 ```
 $ snapctl metric list
 ```
 
-Or see available metrics only for specific disk:
+Get file plugin for publishing, appropriate for Linux or Darwin:
 ```
-$ snapctl metric list | grep sda
+$ wget  http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
+```
+or
+```
+$ wget  http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/darwin/x86_64/snap-plugin-publisher-file
 ```
 
 Load file plugin for publishing:
 ```
-$ snapctl plugin load $SNAP_DIR/build/plugin/snap-plugin-publisher-mock-file
-Plugin loaded
-Name: mock-file
-Version: 3
-Type: publisher
-Signed: false
-Loaded Time: Wed, 23 Dec 2015 11:15:02 EST
+$ snapctl plugin load snap-plugin-publisher-file
 ```
 
 Create a task JSON file (exemplary files in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/examples/tasks/)):
@@ -260,7 +252,8 @@ If you have a feature request, please add it as an [issue](https://github.com/in
 ## Community Support
 This repository is one of **many** plugins in **snap**, a powerful telemetry framework. See the full project at http://github.com/intelsdi-x/snap.
 
-To reach out to other users, head to the [main framework](https://github.com/intelsdi-x/snap#community-support) or visit [snap Gitter channel](https://gitter.im/intelsdi-x/snap).
+To reach out to other users, head to the [main framework](https://github.com/intelsdi-x/snap#community-support) or visit [Slack](http://slack.snap-telemetry.io).
+
 
 ## Contributing
 We love contributions!
