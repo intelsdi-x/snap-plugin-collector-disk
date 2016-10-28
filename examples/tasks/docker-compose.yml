@@ -2,7 +2,7 @@ version: '2'
 services:
   main:
     container_name: runner
-    image: intelsdi/snap:alpine
+    image: intelsdi/snap:alpine_test
     environment:
      - SNAP_VERSION=latest
     volumes:
