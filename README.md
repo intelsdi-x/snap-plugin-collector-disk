@@ -1,9 +1,10 @@
+[![Build Status](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk.svg?branch=master)](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk) [![Build Status](https://ci.snap-telemetry.io/buildStatus/icon?job=snap-plugin-collector-disk-large-prb-k8s)](https://ci.snap-telemetry.io/job/snap-plugin-collector-disk-large-prb-k8s/)
+
 # snap collector plugin - disk
 
-This plugin gather disk statistics from /proc/diskstats (Linux 2.6 or higher) or /proc/partitions (Linux 2.4.)
-															
-The plugin is used in the [snap framework] (http://github.com/intelsdi-x/snap).				
+This plugin gather disk statistics from /proc/diskstats (Linux 2.6+) or /proc/partitions (Linux 2.4) for the [Snap telemetry framework](http://github.com/intelsdi-x/snap).
 
+## Table of Contents
 1. [Getting Started](#getting-started)
   * [System Requirements](#system-requirements)
   * [Installation](#installation)
@@ -21,12 +22,13 @@ The plugin is used in the [snap framework] (http://github.com/intelsdi-x/snap).
 
 ### System Requirements
 
-- Linux system
+- Linux (kernel 2.4, 2.6+)
 
 ### Installation
 
 #### Download the plugin binary:
-You can get the pre-built binaries for your OS and architecture at snap's [GitHub Releases](https://github.com/intelsdi-x/snap/releases) page. Download the plugins package from the latest release, unzip and store in a path you want `snapd` to access.
+
+You can get the pre-built binaries for your OS and architecture from the plugin's [GitHub Releases](https://github.com/intelsdi-x/snap-plugin-collector-disk/releasess) page. Download the plugin from the latest release and load it into `snapd` (`/opt/snap/plugins` is the default location for snap packages).
 
 #### To build the plugin binary:
 
@@ -41,7 +43,7 @@ Build the snap disk plugin by running make within the cloned repo:
 ```
 $ make
 ```
-This builds the plugin in `/build/`
+This builds the plugin in `./build/`
 
 ### Configuration and Usage
 
@@ -49,20 +51,20 @@ This builds the plugin in `/build/`
 * Load the plugin and create a task, see example in [Examples](https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/README.md#examples).
 
 Configuration parameters:
-- `proc_path` path to 'diskstats' or 'partitions' file (helpful for running plugin in Docker container)
+
+- `proc_path`: path to 'diskstats' or 'partitions' file (default: `/proc`)
 
 ## Documentation
 
-Plugin has ability to read metrics from `diskstats` file for kernel 2.6+ or from `partitions` for older kernel versions.
-Path to above files can be provided in configuration in task manifest as `proc_path`. If configuration is not provided, plugin will try
-to read from default locations which are `/proc/diskstats` or `/proc/partitions` respectively.
+This collector gathers metrics from `/proc/diskstats` for kernel 2.6+, or from `/proc/partitions` for kernel 2.4. The configuration `proc_path` determines where the plugin obtains these metrics, with a default setting of `/proc`. This setting is only required to obtain data from a docker container that mounts the host `/proc` in an alternative path.
 
 To read more about disk I/O statistics fields, please visit [www.kernel.org/doc/Documentation/iostats.txt](https://www.kernel.org/doc/Documentation/iostats.txt)
 
 
 ### Collected Metrics
+
 This plugin has the ability to gather the following metrics:
-                                                                                                
+
 Metric namespace is `/intel/procfs/disk/<disk_device>/<metric_name>` where `<disk_device>` expands to sda, sda1, sdb, sdb1 and so on.
 
 Metric namespace | Description
@@ -89,79 +91,41 @@ By default metrics are gathered once per second.
 
 Example of running snap disk collector and writing data to file.
 
-Run the snap daemon:
-```
-$ snapd -l 1 -t 0
-```
+Ensure [snap daemon is running](https://github.com/intelsdi-x/snap#running-snap):
+* initd: `service snap-telemetry start`
+* systemd: `sysctl start snap-telemetry`
+* command line: `snapd -l 1 -t 0 &`
 
-Load disk plugin for collecting:
+Download and load snap plugins:
 ```
-$ snapctl plugin load $SNAP_DISK_PLUGIN_DIR/build/linux/x86_64/snap-plugin-collector-disk
-```
-See all available metrics:
-```
-$ snapctl metric list
-```
-
-Get file plugin for publishing, appropriate for Linux or Darwin:
-```
-$ wget  http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
-```
-or
-```
-$ wget  http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/darwin/x86_64/snap-plugin-publisher-file
-```
-
-Load file plugin for publishing:
-```
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-disk/latest/linux/x86_64/snap-plugin-collector-disk
+$ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
+$ chmod 755 snap-plugin-*
+$ snapctl plugin load snap-plugin-collector-disk
 $ snapctl plugin load snap-plugin-publisher-file
 ```
 
-Create a task JSON file (exemplary files in [examples/tasks/] (https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/examples/tasks/)):
-```json
-{
-    "version": 1,
-    "schedule": {
-        "type": "simple",
-        "interval": "1s"
-    },
-    "workflow": {
-        "collect": {
-            "metrics": {
-                "/intel/procfs/disk/*/ops_read": {},
-                "/intel/procfs/disk/*/ops_write": {},
-                "/intel/procfs/disk/*/merged_read": {},
-                "/intel/procfs/disk/*/merged_write": {},
-                "/intel/procfs/disk/*/octets_read": {},
-                "/intel/procfs/disk/*/octets_write": {},
-                "/intel/procfs/disk/*/io_time": {},
-                "/intel/procfs/disk/*/time_read": {},
-                "/intel/procfs/disk/*/time_write": {},
-                "/intel/procfs/disk/*/weighted_io_time": {},
-                "/intel/procfs/disk/*/pending_ops": {}						
-            },
-            "config": {
-              "/intel/procfs/disk": {
-                  "proc_path": "/var/proc"
-                }
-            },
-            "process": null,
-            "publish": [
-                {
-                    "plugin_name": "mock-file",
-                    "config": {
-                        "file": "/tmp/published_diskstats.log"
-                    }
-                }
-            ]
-        }
-    }
-}
+See all available metrics:
+```
+$ snapctl metric list
+NAMESPACE 				 VERSIONS
+/intel/procfs/disk/*/io_time 		 3
+/intel/procfs/disk/*/merged_read 	 3
+/intel/procfs/disk/*/merged_write 	 3
+/intel/procfs/disk/*/octets_read 	 3
+/intel/procfs/disk/*/octets_write 	 3
+/intel/procfs/disk/*/ops_read 		 3
+/intel/procfs/disk/*/ops_write 		 3
+/intel/procfs/disk/*/pending_ops 	 3
+/intel/procfs/disk/*/time_read 		 3
+/intel/procfs/disk/*/time_write 	 3
+/intel/procfs/disk/*/weighted_io_time 	 3
 ```
 
-Create a task:
+Download an [example task file](https://github.com/intelsdi-x/snap-plugin-collector-disk/blob/master/examples/tasks/) and load it:
 ```
-$ snapctl task create -t $SNAP_DISK_PLUGIN_DIR/examples/tasks/diskstats-file.json
+$ curl -sfLO https://raw.githubusercontent.com/intelsdi-x/snap-plugin-collector-disk/master/examples/tasks/diskstats-file.json
+$ snapctl task create -t diskstats-file.json
 Using task manifest to create task
 Task created
 ID: 480323af-15b0-4af8-a526-eb2ca6d8ae67
@@ -169,32 +133,11 @@ Name: Task-480323af-15b0-4af8-a526-eb2ca6d8ae67
 State: Running
 ```
 
-See sample output from `snapctl task watch <task_id>`
-
+See realtime output from `snapctl task watch <task_id>` (CTRL+C to exit)
 ```
-$ snapctl task watch 480323af-15b0-4af8-a526-eb2ca6d8ae67																									
+$ snapctl task watch 480323af-15b0-4af8-a526-eb2ca6d8ae67
 Watching Task (480323af-15b0-4af8-a526-eb2ca6d8ae67):
 NAMESPACE                                  DATA                        TIMESTAMP                                       SOURCE
-/intel/procfs/disk/sda/io_time                    0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/merged_read                0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/merged_write               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/octets_read                0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/octets_write               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/ops_read                   0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/ops_write                  0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/pending_ops                0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/time_read                  0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/time_write                 0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda/weighted_io_time           0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/io_time                   0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/merged_read               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/merged_write              0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/octets_read               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/octets_write              0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/ops_read                  0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/ops_write                 0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/pending_ops               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sda1/time_read                 0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
 /intel/procfs/disk/sda1/time_write                0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
 /intel/procfs/disk/sda1/weighted_io_time          0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
 /intel/procfs/disk/sdb/io_time                    285.24017494599997          2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
@@ -215,26 +158,9 @@ NAMESPACE                                  DATA                        TIMESTAMP
 /intel/procfs/disk/sdb1/octets_write              2.0617126235076627e+08      2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
 /intel/procfs/disk/sdb1/ops_read                  0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
 /intel/procfs/disk/sdb1/ops_write                 338.722707748375            2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb1/pending_ops               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb1/time_read                 4.300686205             	   2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb1/time_write                119.13865467618942          2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb1/weighted_io_time          33117.57281195954           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/io_time                   0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/merged_read               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/merged_write              0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/octets_read               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/octets_write              2.763419206239478e+06       2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/ops_read                  0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/ops_write                 0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/pending_ops               0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/time_read                 0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/time_write                4.503690537128046           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
-/intel/procfs/disk/sdb2/weighted_io_time          0                           2015-12-23 11:18:09.224143712 -0500 EST         gklab-108-166
 ```
-(Keys `ctrl+c` terminate task watcher)
 
-
-These data are published to file and stored there (in this example in /tmp/published_diskstats).
+This data is published to a file `/tmp/published_diskstats` per task specification
 
 Stop task:
 ```
@@ -254,16 +180,15 @@ This repository is one of **many** plugins in **snap**, a powerful telemetry fra
 
 To reach out to other users, head to the [main framework](https://github.com/intelsdi-x/snap#community-support) or visit [Slack](http://slack.snap-telemetry.io).
 
-
 ## Contributing
 We love contributions!
 
 There's more than one way to give back, from examples to blogs to code updates. See our recommended process in [CONTRIBUTING.md](CONTRIBUTING.md).
-
-And **thank you!** Your contribution, through code and participation, is incredibly important to us.
 
 ## License
 Snap, along with this plugin, is an Open Source software released under the Apache 2.0 [License](LICENSE).
 
 ## Acknowledgements
 * Author: 	[Izabella Raulin](https://github.com/IzabellaRaulin)
+
+**Thank you!** Your contribution is incredibly important to us.
