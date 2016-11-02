@@ -67,18 +67,19 @@ This plugin has the ability to gather the following metrics:
 
 Metric namespace is `/intel/procfs/disk/<disk_device>/<metric_name>` where `<disk_device>` expands to sda, sda1, sdb, sdb1 and so on.
 
-Metric namespace | Description
------------- | -------------
-/intel/procfs/disk/\<disk_device\>/merged_read | The number of read operations per second that could be merged with already queued operations.
-/intel/procfs/disk/\<disk_device\>/merged_write | The number of write operations per second that could be merged with already queued operations.
-/intel/procfs/disk/\<disk_device\>/octets_read | The number of octets (bytes) read per second.
-/intel/procfs/disk/\<disk_device\>/octets_write | The number of octets (bytes) written per second.
-/intel/procfs/disk/\<disk_device\>/ops_read | The number of read operations per second.
-/intel/procfs/disk/\<disk_device\>/ops_write | The number of write operations per second.
-/intel/procfs/disk/\<disk_device\>/time_read | The average time for a read operation to complete in the last interval, in miliseconds.
-/intel/procfs/disk/\<disk_device\>/time_write | The average time for a write operation to complete in the last interval, in miliseconds.
-/intel/procfs/disk/\<disk_device\>/io_time | The time spent doing I/Os, in miliseconds.
-/intel/procfs/disk/\<disk_device\>/weighted_io_time<sup>(1)</sup> | The weighted time spent doing I/Os, in miliseconds.
+Metric namespace | Type | Description
+------------ | ------------- | -------------
+/intel/procfs/disk/\<disk_device\>/merged_read | derive | The number of read operations per second that could be merged with already queued operations.
+/intel/procfs/disk/\<disk_device\>/merged_write | derive | The number of write operations per second that could be merged with already queued operations.
+/intel/procfs/disk/\<disk_device\>/octets_read |derive |  The number of octets (bytes) read per second.
+/intel/procfs/disk/\<disk_device\>/octets_write | derive | The number of octets (bytes) written per second.
+/intel/procfs/disk/\<disk_device\>/ops_read | derive | The number of read operations per second.
+/intel/procfs/disk/\<disk_device\>/ops_write | derive | The number of write operations per second.
+/intel/procfs/disk/\<disk_device\>/time_read | derive |  The average time for a read operation to complete in the last interval, in miliseconds.
+/intel/procfs/disk/\<disk_device\>/time_write | derive |  The average time for a write operation to complete in the last interval, in miliseconds.
+/intel/procfs/disk/\<disk_device\>/io_time | derive | The time spent doing I/Os, in miliseconds.
+/intel/procfs/disk/\<disk_device\>/weighted_io_time<sup>(1)</sup> | derive | The weighted time spent doing I/Os, in miliseconds.
+/intel/procfs/disk/\<disk_device\>/pending_ops</sup> | gauge | The queue size of pending I/O operation.
 
 <sup>1)</sup> The value of metric `weighted_io_time` is incremented at each I/O start, I/O completion, I/O merge, or read of these stats by the number of I/Os in progress times the number of milliseconds spent doing I/O since the
 last update of this field.

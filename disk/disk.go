@@ -37,7 +37,7 @@ const (
 	// Name of plugin
 	pluginName = "disk"
 	// Version of plugin
-	pluginVersion = 3
+	pluginVersion = 4
 	// Type of plugin
 	pluginType = plugin.CollectorPluginType
 
@@ -73,7 +73,7 @@ var (
 
 // DiskCollector holds disk statistics
 type DiskCollector struct {
-	data     diskStats
+	data     diskStats          // holds current raw data
 	dataPrev diskStats          // previous data, to calculate derivatives
 	output   map[string]float64 // contains exposed metrics and their value (calculated based on data & dataPrev)
 	first    bool               // is true for first collecting (do not calculate derivatives), after that set false
@@ -140,19 +140,16 @@ func (dc *DiskCollector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricT
 
 	// List of terminal metric names
 	mList := make(map[string]bool)
-	for stat := range dc.data.stats {
-		metric := plugin.MetricType{Namespace_: core.NewNamespace(createNamespace(stat)...)}
-		ns := metric.Namespace()
-		// Disk metric (aka last element in namespace)
-		mItem := ns[len(ns)-1]
+	for key := range dc.data.stats {
+		_, metricName := parseMetricKey(key)
 		// Keep it if not already seen before
-		if !mList[mItem.Value] {
-			mList[mItem.Value] = true
+		if !mList[metricName] {
+			mList[metricName] = true
 			mts = append(mts, plugin.MetricType{
 				Namespace_: core.NewNamespace(prefix...).
 					AddDynamicElement("disk", "name of disk").
-					AddStaticElement(mItem.Value),
-				Description_: "dynamic disk metric: " + mItem.Value,
+					AddStaticElement(metricName),
+				Description_: "dynamic disk metric: " + metricName,
 			})
 		}
 	}
@@ -168,12 +165,14 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 		return nil, err
 	}
 
-	first := dc.first // true if collecting for the first time
+	// dc.first equals true if collection is processed for the first time
+	first := dc.first
 	if first {
+		// set dc.first to false for the next interval
 		dc.first = false
 	}
 
-	// for first collecting skip stash previous data
+	// for the first collection skip stashing the previous data
 	if !first {
 		// stash disk data (dst, src)
 		stashData(&dc.dataPrev, &dc.data)
@@ -191,56 +190,58 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 			return nil, err
 		}
 	}
+
+	dc.calcGauge()
+
 	for _, m := range mts {
-		ns := m.Namespace()
-		if ns[len(ns)-2].Value == "*" {
-			found := false
-			for i := range dc.output {
-				cMetric := strings.Split(i, "/")
-				if cMetric[len(cMetric)-1] == ns[len(ns)-1].Value {
-					ns1 := core.NewNamespace(createNamespace(i)...)
-					ns1[len(ns1)-2].Name = ns[len(ns)-2].Name
+
+		requestedDiskID, requestedMetric, err := parseNamespace(m.Namespace())
+		if err != nil {
+			return nil, err
+		}
+
+		if requestedDiskID == "*" {
+			for key, value := range dc.output {
+				diskID, metricName := parseMetricKey(key)
+
+				if metricName == requestedMetric {
+					// create a copy of incoming namespace and specify disk name
+					ns := make([]core.NamespaceElement, len(m.Namespace()))
+					copy(ns, m.Namespace())
+					ns[len(prefix)].Value = diskID
+
 					metric := plugin.MetricType{
-						Namespace_: ns1,
-						Data_:      dc.output[i],
+						Namespace_: ns,
+						Data_:      value,
 						Timestamp_: dc.data.timestamp,
+						Version_:   pluginVersion,
+						Tags_:      m.Tags(),
 					}
 					metrics = append(metrics, metric)
-					found = true
 				}
-			}
-			if !found {
-				for i := range dc.data.stats {
-					cMetric := strings.Split(i, "/")
-					if cMetric[len(cMetric)-1] == ns[len(ns)-1].Value {
-						ns1 := core.NewNamespace(createNamespace(i)...)
-						ns1[len(ns1)-2].Name = ns[len(ns)-2].Name
-						metric := plugin.MetricType{
-							Namespace_: ns1,
-							//This is because the first time data is collected, it is stored as a uint64 when parsing
-							//However, the type difference can cause issues with some databases (like InfluxDB)
-							Data_:      float64(dc.data.stats[i]),
-							Timestamp_: dc.data.timestamp,
-						}
-						metrics = append(metrics, metric)
-					}
-				}
+
 			}
 		} else {
-			if v, ok := dc.output[parseNamespace(m.Namespace().Strings())]; ok {
+			// get this metric for specified disk (given explicitly)
+			metricKey := createMetricKey(requestedDiskID, requestedMetric)
+			if value, ok := dc.output[metricKey]; ok {
 				metric := plugin.MetricType{
 					Namespace_: m.Namespace(),
-					Data_:      v,
+					Data_:      value,
 					Timestamp_: dc.data.timestamp,
+					Version_:   pluginVersion,
+					Tags_:      m.Tags(),
 				}
 				metrics = append(metrics, metric)
+
 			} else {
-				log.Warning(fmt.Sprintf("Can not find static metric value for %s", m.Namespace().Strings()))
+				log.Warning(fmt.Sprintf("Can not find metric value for %s", m.Namespace().Strings()))
 			}
 		}
 	}
 
 	return metrics, nil
+
 }
 
 // getDiskStats gets disk stats from file (/proc/{diskstats|partitions}) and stores them in the DiskCollector structure
@@ -310,18 +311,26 @@ func (dc *DiskCollector) getDiskStats(srcFile string) error {
 
 		}
 
-		for key, val := range data {
-			// parse disk stats value
+		for metricName, val := range data {
 			if value, err := strconv.ParseUint(val, 10, 64); err == nil {
-				dc.data.stats[diskName+"/"+key] = value
+				dc.data.stats[createMetricKey(diskName, metricName)] = value
 			} else {
 				// parse failure
-				return fmt.Errorf("Error %v, cannot convert value of `%v` equals %v to uint64", err, diskName+"/"+key, val)
+				return fmt.Errorf("Error %v, invalid value of metric %s for disk %s: cannot convert `%v` to uint64", err, metricName, diskName, val)
 			}
 		}
 	} // end of scanner.Scan()
 
 	return nil
+}
+
+func (dc *DiskCollector) calcGauge() {
+	for key, val := range dc.data.stats {
+		if strings.HasSuffix(key, nPendingOps) {
+			// for 'pending_ops' output value is simply stored as-is
+			dc.output[key] = float64(val)
+		}
+	}
 }
 
 // calcDerivatives calculates derivatives of metrics values and stored them in DiskCollector structure as a 'output'
@@ -342,12 +351,6 @@ func (dc *DiskCollector) calcDerivatives() error {
 	avgDiskTime := make(map[string]*diffStats)
 
 	for key, val := range dc.data.stats {
-
-		if strings.HasSuffix(key, nPendingOps) {
-			// for 'pending_ops' output value is simply stored as-is
-			dc.output[key] = float64(val)
-			continue
-		}
 
 		/** Calculate the change of the value in interval time **/
 
@@ -390,6 +393,8 @@ func (dc *DiskCollector) calcDerivatives() error {
 		case nOpsWrite:
 			avgDiskTime[disk].diffWriteOps = diffVal
 			dc.output[key] = deriveVal
+		case nPendingOps:
+			// its a gauge metric - see calGauge()
 
 		default:
 			dc.output[key] = deriveVal
@@ -418,7 +423,7 @@ func calcTimeIncrement(deltaTime uint64, deltaOps uint64, interval float64) floa
 	return avgTimeIncr + .5
 }
 
-// stashData copies DiskStats struct variables items with teir values from 'src' to 'dst'
+// stashData copies DiskStats struct variables items with their values from 'src' to 'dst'
 func stashData(dst *diskStats, src *diskStats) {
 	dst.timestamp = src.timestamp
 
@@ -428,26 +433,43 @@ func stashData(dst *diskStats, src *diskStats) {
 	}
 }
 
-// createNamespace returns namespace slice of strings composed from: vendor, class, type and components of metric name
-func createNamespace(name string) []string {
-	return append(prefix, strings.Split(name, "/")...)
+// parseNamespace returns extracted disk ID and metric key from a given namespace and true if raw metric is requested
+func parseNamespace(ns core.Namespace) (string, string, error) {
+	if len(ns.Strings()) <= len(prefix)+1 {
+		return "", "", fmt.Errorf("Cannot parse a given namespace %s, it's too short (expected length > %d)", ns.Strings(), len(prefix))
+	}
+
+	// get the next element after prefix which is disk ID
+	diskID := ns.Strings()[len(prefix)]
+
+	// get the last element which is metric's name
+	metricName := ns.Strings()[len(ns)-1]
+
+	return diskID, metricName, nil
 }
 
-// parseNamespace performs reverse operation to createNamespace, extracts metric key from namespace
-func parseNamespace(ns []string) string {
-	// skip prefix in namespace
-	metric := ns[len(prefix):]
-	return strings.Join(metric, "/")
+func isRawMetrics(ns core.Namespace) bool {
+	if ns.Strings()[len(prefix)+1] == "raw" {
+		return true
+	}
+	return false
 }
 
 // parseMetricKey extracts information about disk and metric name from metric key (exemplary metric key is `sda/time_write`)
 func parseMetricKey(k string) (disk, metric string) {
-	result := strings.Split(k, "/")
+	result := strings.Split(k, core.Separator)
+
 	if len(result) < 2 {
 		// invalid key format, return empty strings
 		return
 	}
+
 	return result[0], result[1]
+}
+
+// createMetricKey returns metric key which includes disk name and name of metric, exemplary metric key is `sda/time_write`
+func createMetricKey(diskName string, metricName string) string {
+	return diskName + core.Separator + metricName
 }
 
 func resolveSrcFile(cfg interface{}) (string, error) {
