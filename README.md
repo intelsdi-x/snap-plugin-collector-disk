@@ -94,7 +94,7 @@ Example of running snap disk collector and writing data to file.
 
 Ensure [snap daemon is running](https://github.com/intelsdi-x/snap#running-snap):
 * initd: `service snap-telemetry start`
-* systemd: `sysctl start snap-telemetry`
+* systemd: `systemctl start snap-telemetry`
 * command line: `snapd -l 1 -t 0 &`
 
 Download and load snap plugins:
