@@ -20,30 +20,30 @@ _info "Get latest plugins"
 
 SNAP_FLAG=0
 
-# this block will wait check if snapctl and snapd are loaded before the plugins are loaded and the task is started
+# this block will wait check if snaptel and snapteld are loaded before the plugins are loaded and the task is started
  for i in `seq 1 5`; do
-             if [[ -f /usr/local/bin/snapctl && -f /usr/local/bin/snapd ]];
+             if [[ -f /usr/local/bin/snaptel && -f /usr/local/sbin/snapteld ]];
                 then
 
                     _info "loading plugins"
-                    snapctl plugin load "${PLUGIN_PATH}/snap-plugin-collector-disk"
+                    snaptel plugin load "${PLUGIN_PATH}/snap-plugin-collector-disk"
 
                     _info "creating and starting a task"
-                    snapctl task create -t "${__dir}/task-mock-disk.yml" 
+                    snaptel task create -t "${__dir}/task-mock-disk.yml"
 
                     SNAP_FLAG=1
 
                     break
              fi 
         
-        _info "snapctl and/or snapd are unavailable, sleeping for 3 seconds" 
+        _info "snaptel and/or snapteld are unavailable, sleeping for 3 seconds"
         sleep 3
 done 
 
 
-# check if snapctl/snapd have loaded
+# check if snaptel/snapteld have loaded
 if [ $SNAP_FLAG -eq 0 ]
     then
-     echo "Could not load snapctl or snapd"
+     echo "Could not load snaptel or snapteld"
      exit 1
 fi
