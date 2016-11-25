@@ -19,10 +19,10 @@ run `mock-disk.sh`.
 - [task-mock-disk.yml](task-mock-disk.yml)
     - Snap task definition
 - [docker-compose.yml](docker-compose.yml)
-    - A docker compose file which defines a snapd container
-        - "runner" is the container where snapd is run from.  You will be dumped 
+    - A docker compose file which defines a snapteld container
+        - "runner" is the container where snapteld is run from.  You will be dumped 
         into a shell in this container after running 
         [run-mock-disk.sh](run-mock-disk.sh).  Exiting the shell will
         trigger cleaning up the containers used in the example.
 - [mock-disk.sh](mock-disk.sh)
-    - Downloads `snapd`, `snapctl`, `snap-plugin-collector-disk`, and starts the task [task-mock-disk.yml](task-mock-disk.yml).
+    - Downloads `snapteld`, `snaptel`, `snap-plugin-collector-disk`, and starts the task [task-mock-disk.yml](task-mock-disk.yml).
