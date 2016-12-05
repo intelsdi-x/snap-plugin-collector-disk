@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "1s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/procfs/disk/sda/*": {}
+      },
+      "config": {
+        "/intel/procfs/disk": {
+          "proc_path": "/proc"
+        }
+      },
+      "process": null,
+      "publish": [
+        {
+          "plugin_name": "file",
+          "config": {
+            "file": "/tmp/published_diskstats_sda.log"
+          }
+        }
+      ]
+    }
+  }
+}
