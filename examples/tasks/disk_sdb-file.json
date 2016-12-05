@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "1s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/procfs/disk/sdb/ops_read": {},
+        "/intel/procfs/disk/sdb/ops_write": {},
+        "/intel/procfs/disk/sdb/merged_read": {},
+        "/intel/procfs/disk/sdb/merged_write": {},
+        "/intel/procfs/disk/sdb/octets_read": {},
+        "/intel/procfs/disk/sdb/octets_write": {},
+        "/intel/procfs/disk/sdb/io_time": {},
+        "/intel/procfs/disk/sdb/time_read": {},
+        "/intel/procfs/disk/sdb/time_write": {},
+        "/intel/procfs/disk/sdb/weighted_io_time": {},
+        "/intel/procfs/disk/sdb/pending_ops": {}
+      },
+      "config": {
+        "/intel/procfs/disk": {
+          "proc_path": "/proc"
+        }
+      },
+      "process": null,
+      "publish": [
+        {
+          "plugin_name": "file",
+          "config": {
+            "file": "/tmp/published_diskstats_sdb.log"
+          }
+        }
+      ]
+    }
+  }
+}

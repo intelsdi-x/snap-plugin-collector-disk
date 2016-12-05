@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "1s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/procfs/disk/*": {}
+      },
+      "config": {
+        "/intel/procfs/disk": {
+          "proc_path": "/proc"
+        }
+      },
+      "process": null,
+      "publish": [
+        {
+          "plugin_name": "file",
+          "config": {
+            "file": "/tmp/published_diskstats_all.log"
+          }
+        },
+        {
+          "plugin_name": "influxdb",
+          "config": {
+            "host": "127.0.0.1",
+            "port": 8086,
+            "database": "snap",
+            "user": "admin",
+            "password": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
