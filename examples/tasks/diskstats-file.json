@@ -21,7 +21,7 @@
       },
       "config": {
         "/intel/procfs/disk": {
-          "proc_path": "/proc"
+          "proc_path": "/var/procfs"
         }
       },
       "process": null,

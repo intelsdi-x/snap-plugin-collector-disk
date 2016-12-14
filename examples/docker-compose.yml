@@ -7,3 +7,4 @@ services:
      - SNAP_VERSION=latest
     volumes:
       - ${PLUGIN_SRC}:/snap-plugin-collector-disk
+      - /proc:/var/procfs

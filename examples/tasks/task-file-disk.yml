@@ -9,5 +9,5 @@
       metrics:
         /intel/procfs/disk/*/* : {}
       config:
-        /intel/procfs/proc:
-            proc_path: "/proc"
+        /intel/procfs/disk:
+            proc_path: "/var/procfs"
