@@ -17,7 +17,7 @@ export PROJECT_NAME="${__proj_name}"
 
 TEST_TYPE="${TEST_TYPE:-"large"}"
 
-docker_folder="${__proj_dir}/examples/tasks"
+docker_folder="${__proj_dir}/examples"
 
 _docker_project () {
   (cd "${docker_folder}" && "$@")

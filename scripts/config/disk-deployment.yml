@@ -17,3 +17,10 @@ spec:
                 - name: SNAP_VERSION
                   value: "latest"
               imagePullPolicy: "IfNotPresent"
+              volumeMounts:
+              - mountPath: /var/procfs
+                name: procfs
+            volumes:
+            - name: procfs
+              hostPath:
+                path: /proc

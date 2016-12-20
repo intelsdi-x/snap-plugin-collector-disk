@@ -8,7 +8,7 @@ set -o pipefail
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # source the common bash script 
-. "${__dir}/../../scripts/common.sh"
+. "${__dir}/../scripts/common.sh"
 
 # ensure PLUGIN_PATH is set
 TMPDIR=${TMPDIR:-"/tmp"}
@@ -29,7 +29,7 @@ SNAP_FLAG=0
                     snaptel plugin load "${PLUGIN_PATH}/snap-plugin-collector-disk"
 
                     _info "creating and starting a task"
-                    snaptel task create -t "${__dir}/task-mock-disk.yml"
+                    snaptel task create -t "${__dir}/tasks/task-file-disk.yml"
 
                     SNAP_FLAG=1
 
