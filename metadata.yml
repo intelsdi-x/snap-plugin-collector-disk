@@ -5,7 +5,5 @@ license: Apache-2.0
 description: "Collects Linux disk metrics from /proc/diskstats."
 badge:
   - "[![Build Status](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk.svg?branch=master)](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk)"
-  - "[![Build Status](https://ci.snap-telemetry.io/job/snap-plugin-collector-disk-large-prb-k8s/badge/icon)](https://ci.snap-telemetry.io/job/snap-plugin-collector-disk-large-prb-k8s/)"
 ci:
   - https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk
-  - https://ci.snap-telemetry.io/job/snap-plugin-collector-disk-large-prb-k8s/
