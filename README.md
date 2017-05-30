@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk.svg?branch=master)](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk) [![Build Status](https://ci.snap-telemetry.io/buildStatus/icon?job=snap-plugin-collector-disk-large-prb-k8s)](https://ci.snap-telemetry.io/job/snap-plugin-collector-disk-large-prb-k8s/)
+[![Build Status](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk.svg?branch=master)](https://travis-ci.org/intelsdi-x/snap-plugin-collector-disk) [![Build Status](https://ci.snap-telemetry.io/job/snap-plugin-collector-disk-ec2-periodic/badge/icon)](https://ci.snap-telemetry.io/job/snap-plugin-collector-disk-ec2-periodic/)
 
 # snap collector plugin - disk
 
