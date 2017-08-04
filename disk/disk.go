@@ -1,10 +1,15 @@
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
+
+
 Copyright 2016 Intel Corporation
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,20 +31,14 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/intelsdi-x/snap/control/plugin"
-	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
-	"github.com/intelsdi-x/snap/core"
-
-	"github.com/intelsdi-x/snap-plugin-utilities/config"
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 )
 
 const (
 	// Name of plugin
-	pluginName = "disk"
+	PluginName = "disk"
 	// Version of plugin
-	pluginVersion = 4
-	// Type of plugin
-	pluginType = plugin.CollectorPluginType
+	PluginVersion = 5
 
 	nsVendor = "intel"
 	nsClass  = "procfs"
@@ -73,14 +72,14 @@ var (
 
 // DiskCollector holds disk statistics
 type DiskCollector struct {
-	data     diskStats          // holds current raw data
-	dataPrev diskStats          // previous data, to calculate derivatives
-	output   map[string]float64 // contains exposed metrics and their value (calculated based on data & dataPrev)
-	first    bool               // is true for first collecting (do not calculate derivatives), after that set false
+	data     diskStats             // holds current raw data
+	dataPrev diskStats             // previous data, to calculate derivatives
+	output   map[metricKey]float64 // contains exposed metrics and their value (calculated based on data & dataPrev)
+	first    bool                  // is true for first collecting (do not calculate derivatives), after that set false
 }
 
 type diskStats struct {
-	stats     map[string]uint64
+	stats     map[metricKey]uint64
 	timestamp time.Time
 }
 
@@ -91,43 +90,37 @@ type diffStats struct {
 	diffReadOps   uint64
 }
 
+type metricKey [2]string
+
 // prefix in metric namespace
 var prefix = []string{nsVendor, nsClass, nsType}
 
 // New returns snap-plugin-collector-disk instance
 func New() (*DiskCollector, error) {
-	dc := &DiskCollector{data: diskStats{stats: map[string]uint64{}, timestamp: time.Now()},
-		dataPrev: diskStats{stats: map[string]uint64{}, timestamp: time.Now()},
-		output:   map[string]float64{},
+	dc := &DiskCollector{data: diskStats{stats: map[metricKey]uint64{}, timestamp: time.Now()},
+		dataPrev: diskStats{stats: map[metricKey]uint64{}, timestamp: time.Now()},
+		output:   map[metricKey]float64{},
 		first:    true}
 	return dc, nil
 }
 
 // Meta returns plugin meta data
-func Meta() *plugin.PluginMeta {
-	return plugin.NewPluginMeta(
-		pluginName,
-		pluginVersion,
-		pluginType,
-		[]string{},
-		[]string{plugin.SnapGOBContentType},
+func Meta() []plugin.MetaOpt {
+	return []plugin.MetaOpt{
 		plugin.ConcurrencyCount(1),
-	)
+	}
 }
 
 // GetConfigPolicy returns a ConfigPolicy
-func (dc *DiskCollector) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
-	cp := cpolicy.New()
-	rule, _ := cpolicy.NewStringRule("proc_path", false, "/proc")
-	node := cpolicy.NewPolicyNode()
-	node.Add(rule)
-	cp.Add([]string{nsVendor, nsClass, pluginName}, node)
-	return cp, nil
+func (dc *DiskCollector) GetConfigPolicy() (plugin.ConfigPolicy, error) {
+	policy := plugin.NewConfigPolicy()
+	policy.AddNewStringRule(prefix, "proc_path", false, plugin.SetDefaultString("/proc"))
+	return *policy, nil
 }
 
 // GetMetricTypes returns list of exposed disk stats metrics
-func (dc *DiskCollector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricType, error) {
-	mts := []plugin.MetricType{}
+func (dc *DiskCollector) GetMetricTypes(cfg plugin.Config) ([]plugin.Metric, error) {
+	mts := []plugin.Metric{}
 
 	procFilePath, err := resolveSrcFile(cfg)
 	if err != nil {
@@ -145,11 +138,11 @@ func (dc *DiskCollector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricT
 		// Keep it if not already seen before
 		if !mList[metricName] {
 			mList[metricName] = true
-			mts = append(mts, plugin.MetricType{
-				Namespace_: core.NewNamespace(prefix...).
+			mts = append(mts, plugin.Metric{
+				Namespace: plugin.NewNamespace(prefix...).
 					AddDynamicElement("disk", "name of disk").
 					AddStaticElement(metricName),
-				Description_: "dynamic disk metric: " + metricName,
+				Description: "dynamic disk metric: " + metricName,
 			})
 		}
 	}
@@ -157,10 +150,10 @@ func (dc *DiskCollector) GetMetricTypes(cfg plugin.ConfigType) ([]plugin.MetricT
 }
 
 // CollectMetrics retrieves disk stats values for given metrics
-func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.MetricType, error) {
-	metrics := []plugin.MetricType{}
+func (dc *DiskCollector) CollectMetrics(mts []plugin.Metric) ([]plugin.Metric, error) {
+	metrics := []plugin.Metric{}
 
-	procFilePath, err := resolveSrcFile(mts[0])
+	procFilePath, err := resolveSrcFile(mts[0].Config)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +188,7 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 
 	for _, m := range mts {
 
-		requestedDiskID, requestedMetric, err := parseNamespace(m.Namespace())
+		requestedDiskID, requestedMetric, err := parseNamespace(m.Namespace)
 		if err != nil {
 			return nil, err
 		}
@@ -206,16 +199,15 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 
 				if metricName == requestedMetric {
 					// create a copy of incoming namespace and specify disk name
-					ns := make([]core.NamespaceElement, len(m.Namespace()))
-					copy(ns, m.Namespace())
+					ns := plugin.CopyNamespace(m.Namespace)
 					ns[len(prefix)].Value = diskID
 
-					metric := plugin.MetricType{
-						Namespace_: ns,
-						Data_:      value,
-						Timestamp_: dc.data.timestamp,
-						Version_:   pluginVersion,
-						Tags_:      m.Tags(),
+					metric := plugin.Metric{
+						Namespace: ns,
+						Data:      value,
+						Timestamp: dc.data.timestamp,
+						Version:   PluginVersion,
+						Tags:      m.Tags,
 					}
 					metrics = append(metrics, metric)
 				}
@@ -225,17 +217,17 @@ func (dc *DiskCollector) CollectMetrics(mts []plugin.MetricType) ([]plugin.Metri
 			// get this metric for specified disk (given explicitly)
 			metricKey := createMetricKey(requestedDiskID, requestedMetric)
 			if value, ok := dc.output[metricKey]; ok {
-				metric := plugin.MetricType{
-					Namespace_: m.Namespace(),
-					Data_:      value,
-					Timestamp_: dc.data.timestamp,
-					Version_:   pluginVersion,
-					Tags_:      m.Tags(),
+				metric := plugin.Metric{
+					Namespace: m.Namespace,
+					Data:      value,
+					Timestamp: dc.data.timestamp,
+					Version:   PluginVersion,
+					Tags:      m.Tags,
 				}
 				metrics = append(metrics, metric)
 
 			} else {
-				log.Warning(fmt.Sprintf("Can not find metric value for %s", m.Namespace().Strings()))
+				log.Warning(fmt.Sprintf("Can not find metric value for %s", m.Namespace.Strings()))
 			}
 		}
 	}
@@ -326,7 +318,7 @@ func (dc *DiskCollector) getDiskStats(srcFile string) error {
 
 func (dc *DiskCollector) calcGauge() {
 	for key, val := range dc.data.stats {
-		if strings.HasSuffix(key, nPendingOps) {
+		if _, metric := parseMetricKey(key); strings.HasSuffix(metric, nPendingOps) {
 			// for 'pending_ops' output value is simply stored as-is
 			dc.output[key] = float64(val)
 		}
@@ -403,8 +395,8 @@ func (dc *DiskCollector) calcDerivatives() error {
 
 	// calculate disk time
 	for disk, values := range avgDiskTime {
-		dc.output[disk+"/"+nTimeRead] = calcTimeIncrement(values.diffReadTime, values.diffReadOps, interval)
-		dc.output[disk+"/"+nTimeWrite] = calcTimeIncrement(values.diffWriteTime, values.diffWriteOps, interval)
+		dc.output[createMetricKey(disk, nTimeRead)] = calcTimeIncrement(values.diffReadTime, values.diffReadOps, interval)
+		dc.output[createMetricKey(disk, nTimeWrite)] = calcTimeIncrement(values.diffWriteTime, values.diffWriteOps, interval)
 	}
 
 	return nil
@@ -434,7 +426,7 @@ func stashData(dst *diskStats, src *diskStats) {
 }
 
 // parseNamespace returns extracted disk ID and metric key from a given namespace and true if raw metric is requested
-func parseNamespace(ns core.Namespace) (string, string, error) {
+func parseNamespace(ns plugin.Namespace) (string, string, error) {
 	if len(ns.Strings()) <= len(prefix)+1 {
 		return "", "", fmt.Errorf("Cannot parse a given namespace %s, it's too short (expected length > %d)", ns.Strings(), len(prefix))
 	}
@@ -448,7 +440,7 @@ func parseNamespace(ns core.Namespace) (string, string, error) {
 	return diskID, metricName, nil
 }
 
-func isRawMetrics(ns core.Namespace) bool {
+func isRawMetrics(ns plugin.Namespace) bool {
 	if ns.Strings()[len(prefix)+1] == "raw" {
 		return true
 	}
@@ -456,27 +448,20 @@ func isRawMetrics(ns core.Namespace) bool {
 }
 
 // parseMetricKey extracts information about disk and metric name from metric key (exemplary metric key is `sda/time_write`)
-func parseMetricKey(k string) (disk, metric string) {
-	result := strings.Split(k, core.Separator)
-
-	if len(result) < 2 {
-		// invalid key format, return empty strings
-		return
-	}
-
-	return result[0], result[1]
+func parseMetricKey(k metricKey) (disk, metric string) {
+	return k[0], k[1]
 }
 
 // createMetricKey returns metric key which includes disk name and name of metric, exemplary metric key is `sda/time_write`
-func createMetricKey(diskName string, metricName string) string {
-	return diskName + core.Separator + metricName
+func createMetricKey(diskName string, metricName string) metricKey {
+	return metricKey{diskName, metricName}
 }
 
-func resolveSrcFile(cfg interface{}) (string, error) {
+func resolveSrcFile(config plugin.Config) (string, error) {
 	// first configuration
-	if srcFile, err := config.GetConfigItem(cfg, "proc_path"); err == nil {
+	if srcFile, err := config.GetString("proc_path"); err == nil {
 		// diskstats
-		diskstats := path.Join(srcFile.(string), "diskstats")
+		diskstats := path.Join(srcFile, "diskstats")
 		fh, err := os.Open(diskstats)
 		if err == nil {
 			fh.Close()
@@ -484,13 +469,13 @@ func resolveSrcFile(cfg interface{}) (string, error) {
 		}
 
 		// partitions old kernel
-		partitions := path.Join(srcFile.(string), "partitions")
+		partitions := path.Join(srcFile, "partitions")
 		fh, err = os.Open(partitions)
 		if err == nil {
 			fh.Close()
 			return partitions, nil
 		} else {
-			return "", fmt.Errorf("Provided path to procfs diskstats/partitions is not correct {%s}", srcFile.(string))
+			return "", fmt.Errorf("Provided path to procfs diskstats/partitions is not correct {%s}", srcFile)
 		}
 
 	}

@@ -1,12 +1,17 @@
-// +build linux
+// +build small
 
 /*
 http://www.apache.org/licenses/LICENSE-2.0.txt
+
+
 Copyright 2016 Intel Corporation
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +25,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/intelsdi-x/snap/control/plugin"
-	"github.com/intelsdi-x/snap/core"
-
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 )
 
 const (
@@ -33,41 +37,60 @@ const (
 )
 
 var (
-	mockMts = []plugin.MetricType{
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "ops_read"),
+	mockMts = []plugin.Metric{
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda", "ops_read"),
 		},
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "ops_write"),
-		},
-
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "octets_read"),
-		},
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda", "octets_write"),
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda", "ops_write"),
 		},
 
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "ops_read"),
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda", "octets_read"),
 		},
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "ops_write"),
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda", "octets_write"),
 		},
 
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "octets_read"),
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda1", "ops_read"),
 		},
-		plugin.MetricType{
-			Namespace_: core.NewNamespace("intel", "procfs", "disk", "test_sda1", "octets_write"),
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda1", "ops_write"),
+		},
+
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda1", "octets_read"),
+		},
+		plugin.Metric{
+			Namespace: plugin.NewNamespace("intel", "procfs", "disk", "test_sda1", "octets_write"),
 		},
 	}
 
-	srcMockFile       = "/tmp/diskstats_mock"
-	srcMockFileNext   = "/tmp/diskstats_mock_next"
-	srcMockFileOldVer = "/tmp/partitions_mock"
-	srcMockFileInv    = "/tmp/invalid_mock"
+	srcMockFile           = "/tmp/diskstats_mock"
+	srcMockFileNext       = "/tmp/diskstats_mock_next"
+	srcMockFileOldVer     = "/tmp/partitions_mock"
+	srcMockFileInv        = "/tmp/invalid_mock"
+	bkupDefaultSrcFile    string
+	bkupDefaultSrcFileOld string
 )
+
+func TestMain(m *testing.M) {
+	PrepareTests()
+	ret := m.Run()
+	TeardownTests()
+	os.Exit(ret)
+}
+
+func PrepareTests() {
+	bkupDefaultSrcFile = defaultSrcFile
+	bkupDefaultSrcFileOld = defaultSrcFileOld
+}
+
+func TeardownTests() {
+	defaultSrcFile = bkupDefaultSrcFile
+	defaultSrcFileOld = bkupDefaultSrcFileOld
+}
 
 func TestGetConfigPolicy(t *testing.T) {
 	Convey("normal case", t, func() {
@@ -84,7 +107,7 @@ func TestGetConfigPolicy(t *testing.T) {
 func TestGetMetricTypes(t *testing.T) {
 	defaultSrcFile = srcMockFile
 	defaultSrcFileOld = srcMockFileOldVer
-	var cfg plugin.ConfigType
+	var cfg plugin.Config
 
 	createMockFiles()
 
@@ -190,7 +213,7 @@ func TestCollectMetrics(t *testing.T) {
 				So(results, ShouldNotBeEmpty)
 				So(len(results), ShouldEqual, len(mockMts))
 				for _, r := range results {
-					So(r.Data(), ShouldEqual, 0)
+					So(r.Data, ShouldEqual, 0)
 				}
 			})
 
@@ -202,7 +225,7 @@ func TestCollectMetrics(t *testing.T) {
 				So(len(results), ShouldEqual, len(mockMts))
 
 				for _, r := range results {
-					So(r.Data(), ShouldNotEqual, 0)
+					So(r.Data, ShouldNotEqual, 0)
 				}
 			})
 		})
