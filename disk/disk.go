@@ -38,7 +38,7 @@ const (
 	// Name of plugin
 	PluginName = "disk"
 	// Version of plugin
-	PluginVersion = 5
+	PluginVersion = 6
 
 	nsVendor = "intel"
 	nsClass  = "procfs"
@@ -92,8 +92,17 @@ type diffStats struct {
 
 type metricKey [2]string
 
-// prefix in metric namespace
-var prefix = []string{nsVendor, nsClass, nsType}
+const (
+	majorNumberLoopbackDevice = 7
+	majorNumberRAMdevice      = 1
+)
+
+var (
+	// prefix in metric namespace
+	prefix         = []string{nsVendor, nsClass, nsType}
+	ignoreLoopback = false
+	ignoreRAM      = false
+)
 
 // New returns snap-plugin-collector-disk instance
 func New() (*DiskCollector, error) {
@@ -115,6 +124,8 @@ func Meta() []plugin.MetaOpt {
 func (dc *DiskCollector) GetConfigPolicy() (plugin.ConfigPolicy, error) {
 	policy := plugin.NewConfigPolicy()
 	policy.AddNewStringRule(prefix, "proc_path", false, plugin.SetDefaultString("/proc"))
+	policy.AddNewBoolRule(prefix, "ignore_ram", false, plugin.SetDefaultBool(false))
+	policy.AddNewBoolRule(prefix, "ignore_loopback", false, plugin.SetDefaultBool(false))
 	return *policy, nil
 }
 
@@ -152,6 +163,9 @@ func (dc *DiskCollector) GetMetricTypes(cfg plugin.Config) ([]plugin.Metric, err
 // CollectMetrics retrieves disk stats values for given metrics
 func (dc *DiskCollector) CollectMetrics(mts []plugin.Metric) ([]plugin.Metric, error) {
 	metrics := []plugin.Metric{}
+
+	ignoreLoopback, _ = mts[0].Config.GetBool("ignore_loopback")
+	ignoreRAM, _ = mts[0].Config.GetBool("ignore_ram")
 
 	procFilePath, err := resolveSrcFile(mts[0].Config)
 	if err != nil {
@@ -267,14 +281,33 @@ func (dc *DiskCollector) getDiskStats(srcFile string) error {
 			continue
 		}
 
+		// get major device number
+		major, err := strconv.ParseUint(fields[0], 10, 64)
+		if err != nil {
+			// invalid format of file
+			return err
+		}
+		diskName := fields[2+fieldshift]
+
+		if ignoreLoopback && major == majorNumberLoopbackDevice {
+			log.WithFields(log.Fields{
+				"block": "getDiskStats",
+			}).Debugf("Skipping the entry with loopback device `%s`", diskName)
+			continue
+		}
+		if ignoreRAM && major == majorNumberRAMdevice {
+			log.WithFields(log.Fields{
+				"block": "getDiskStats",
+			}).Debugf("Skipping the entry with RAM device `%s`", diskName)
+			continue
+		}
+
 		// get minor device number
 		minor, err := strconv.ParseUint(fields[1], 10, 64)
 		if err != nil {
 			// invalid format of file
 			return err
 		}
-
-		diskName := fields[2+fieldshift]
 
 		if numfields == 7 {
 			/* Kernel < 2.6, proc/partitions */

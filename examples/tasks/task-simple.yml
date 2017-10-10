@@ -10,6 +10,5 @@
         /intel/procfs/disk/* : {}
       config:
         /intel/procfs/disk:
-            proc_path: "/proc"
             ignore_loopback: true
             ignore_ram: true
