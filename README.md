@@ -6,13 +6,13 @@ This plugin gather disk statistics from /proc/diskstats (Linux 2.6+) or /proc/pa
 
 ## Table of Contents
 1. [Getting Started](#getting-started)
-  * [System Requirements](#system-requirements)
-  * [Installation](#installation)
-  * [Configuration and Usage](#configuration-and-usage)
+   * [System Requirements](#system-requirements)
+   * [Installation](#installation)
+   * [Configuration and Usage](#configuration-and-usage)
 2. [Documentation](#documentation)
-  * [Collected Metrics](#collected-metrics)
-  * [Examples](#examples)
-  * [Roadmap](#roadmap)
+   * [Collected Metrics](#collected-metrics)
+   * [Examples](#examples)
+   * [Roadmap](#roadmap)
 3. [Community Support](#community-support)
 4. [Contributing](#contributing)
 5. [License](#license)
@@ -53,6 +53,11 @@ This builds the plugin in `./build/`
 Configuration parameters:
 
 - `proc_path`: path to 'diskstats' or 'partitions' file (default: `/proc`)
+- `ignore_ram`: set to `true` to ignore RAM devices (default: false)
+- `ignore_loopback`: set to `true` to ignore loopback devices (default: false)
+
+By default metrics for all devices listed in `diskstats` file are reported. You can limit them by setting `ignore_ram` and/or `ignore_loopback` to true. Then devices with major number equals respectively 1 and/or 7 will be
+ignored in data collection.
 
 ## Documentation
 

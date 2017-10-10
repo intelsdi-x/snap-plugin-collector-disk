@@ -11,7 +11,9 @@
       },
       "config": {
         "/intel/procfs/disk": {
-          "proc_path": "/proc"
+          "proc_path": "/proc",
+          "ignore_ram": false,
+          "ignore_loopback": false
         }
       },
       "process": null,
